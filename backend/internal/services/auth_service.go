@@ -1,22 +1,22 @@
 package services
 
 import (
-"errors"
-"time"
+	"errors"
+	"time"
 
-"github.com/bhop_dynasty/0x40_cloud/internal/config"
-"github.com/bhop_dynasty/0x40_cloud/internal/models"
-"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
-"github.com/golang-jwt/jwt/v5"
-"golang.org/x/crypto/bcrypt"
+	"github.com/bhop_dynasty/0x40_cloud/internal/config"
+	"github.com/bhop_dynasty/0x40_cloud/internal/models"
+	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-// BcryptCost определяет сложность хеширования
-// 10 = быстро (для разработки)
-// 12 = рекомендуется для production (медленнее, но безопаснее)
-// 14 = очень безопасно (но медленно)
-BcryptCost = 12
+	// BcryptCost определяет сложность хеширования
+	// 10 = быстро (для разработки)
+	// 12 = рекомендуется для production (медленнее, но безопаснее)
+	// 14 = очень безопасно (но медленно)
+	BcryptCost = 12
 )
 
 type AuthService struct {
@@ -48,8 +48,6 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 		return nil, errors.New("username already taken")
 	}
 
-	// Используем BcryptCost вместо DefaultCost для лучшей безопасности
-	// bcrypt автоматически генерирует случайную соль для каждого пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), BcryptCost)
 	if err != nil {
 		return nil, errors.New("failed to hash password")
@@ -131,7 +129,7 @@ func (s *AuthService) generateToken(user *models.User) (string, error) {
 
 func (s *AuthService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}
 		return []byte(s.cfg.JWT.Secret), nil

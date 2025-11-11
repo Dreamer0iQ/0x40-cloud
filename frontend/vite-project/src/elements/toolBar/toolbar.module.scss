@@ -1,0 +1,112 @@
+.toolbar {
+  width: 80px;
+  height: 100vh;
+  background-color: #1E1E1E;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid #3A3A3A;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    fill: none;
+  }
+}
+
+.iconButton {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    
+    path, circle {
+      stroke: #808080;
+      fill: none;
+      transition: stroke 0.3s ease;
+    }
+  }
+  
+  &:hover {
+    background-color: #272727;
+    
+    svg path, svg circle {
+      stroke: #FFFFFF;
+    }
+  }
+  
+  &.active {
+    background-color: #3A3A3A;
+    
+    svg path, svg circle {
+      stroke: #3B82F6;
+    }
+  }
+}
+
+.bottomSection {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.themeToggle {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: #3A3A3A;
+  transition: background-color 0.3s ease;
+  border: none;
+  padding: 0;
+  
+  svg {
+    fill: none;
+    
+    path {
+      fill: none;
+    }
+  }
+  
+  &:hover {
+    background-color: #272727;
+  }
+}
+
+.childrenContainer {
+  width: calc(100% - 80px);
+  display: flex;
+  gap: 15px;
+  border-top: 1px solid #3A3A3A;
+  margin-left: 80px;
+}
