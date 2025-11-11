@@ -10,7 +10,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  border-right: 1px solid #3A3A3A;
+  border-right: 1px solid #272727;
   flex-shrink: 0;
 }
 
@@ -106,7 +106,6 @@
 .childrenContainer {
   width: calc(100% - 80px);
   display: flex;
-  gap: 15px;
   border-top: 1px solid #3A3A3A;
   margin-left: 80px;
 }

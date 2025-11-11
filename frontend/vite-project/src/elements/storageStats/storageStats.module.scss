@@ -1,0 +1,114 @@
+.storageStats {
+  display: flex;
+  gap: 30px;
+  border-radius: 12px;
+  margin: 20px;
+  margin-top: 0;
+  width: calc(80% - 72px);
+}
+
+.statCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background-color: #1E1E1E;
+  border-radius: 8px;
+  position: relative;
+}
+
+.circleChart {
+  width: 80px;
+  height: 80px;
+  transform: rotate(-45deg);
+}
+
+.circleBackground {
+  fill: none;
+  stroke: #3A3A3A;
+  stroke-width: 8;
+}
+
+.circleProgress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.1s linear, stroke 0.3s ease;
+}
+
+.animated {
+  animation: drawCircle 1.5s ease-out forwards;
+}
+
+@keyframes drawCircle {
+  from {
+    stroke-dasharray: 0 283;
+  }
+}
+
+.percentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 600;
+  color: #FFFFFF;
+  transition: opacity 0.3s ease;
+  animation: fadeIn 0.5s ease-out 0.3s backwards;
+  margin-top: 30px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.label {
+  font-size: 13px;
+  color: #808080;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 15px;
+  width: 100%;
+  animation: fadeIn 0.5s ease-out 0.6s backwards;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #B0B0B0;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .storageStats {
+    flex-direction: column;
+  }
+  
+  .legend {
+    grid-template-columns: 1fr;
+  }
+}

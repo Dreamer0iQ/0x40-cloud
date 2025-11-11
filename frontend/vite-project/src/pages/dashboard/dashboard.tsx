@@ -3,6 +3,10 @@ import { authService } from '../../services/authService';
 import type { User } from '../../types/auth';
 import styles from './dashboard.module.scss';
 import ToolBar from '../../elements/toolBar/toolbar';
+import SearchBar from '../../elements/searchBar/searchbar';
+import ManageFiles from '../../elements/manageFiles/manageFiles';
+import Recommendations from '../../elements/recommendations/recommendations';
+import StorageStats from '../../elements/storageStats/storageStats';
 
 interface DashboardProps {
     onLogout: () => void;
@@ -14,6 +18,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
     useEffect(() => {
         loadUser();
+        
+        document.body.style.overflow = 'hidden';
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, []);
 
     const loadUser = async () => {
@@ -22,19 +32,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             setUser(userData);
         } catch (error) {
             console.error('Failed to load user:', error);
-            // Если не удалось загрузить пользователя, вызываем logout
             authService.logout();
             onLogout();
         } finally {
             setLoading(false);
         }
     };
-
-    const handleLogout = () => {
-        authService.logout();
-        onLogout();
-    };
-
+    
     if (loading) {
         return (
             <div className={styles.container}>
@@ -44,31 +48,36 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     }
 
     return (
-        <ToolBar>
-            <div className={styles.container}>
-                <div className={styles.header}>
-                    <h1>0x40 Cloud Dashboard</h1>
-                    <button onClick={handleLogout} className={styles.logoutBtn}>
-                        Logout
-                    </button>
-                </div>
+        <div className={styles.dashboardWrapper}>
+            <ToolBar>
+                <SearchBar></SearchBar>
+                <div className={styles.container} style={{"marginTop": "60px"}}>
+                                    <StorageStats 
+                diskUsed={11.91}
+                diskTotal={9.76}
+                filesByType={{
+                    documents: 45,
+                    images: 999,
+                    videos: 8,
+                    other: 23
+                }}
+                />
+                    <Recommendations files={[
+                        { filename: "Client interview...", extension: "DOCX", lastAccess: "Just added • Dropbox" },
+                        { filename: "Vaccine Statistics.xls", extension: "XLS", lastAccess: "45m ago • Local Computer" },
+                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" },
+                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" }
+                        ]} />
 
-                <div className={styles.content}>
-                    <div className={styles.card}>
-                        <h2>Welcome, {user?.username}!</h2>
-                        <div className={styles.userInfo}>
-                            <p><strong>Email:</strong> {user?.email}</p>
-                            <p><strong>User ID:</strong> {user?.id}</p>
-                            <p><strong>Joined:</strong> {new Date(user?.created_at || '').toLocaleDateString()}</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.card}>
-                        <h3>🎉 Authentication Successful!</h3>
-                        <p>Your frontend is now connected to the backend API.</p>
-                    </div>
+                    <Recommendations files={[
+                        { filename: "Client interview...", extension: "DOCX", lastAccess: "Just added • Dropbox" },
+                        { filename: "Vaccine Statistics.xls", extension: "XLS", lastAccess: "45m ago • Local Computer" },
+                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" },
+                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" }
+                        ]} title='Recent'/>
                 </div>
-            </div>
-        </ToolBar>
+                <ManageFiles></ManageFiles>
+            </ToolBar>        
+        </div>
     );
 }
