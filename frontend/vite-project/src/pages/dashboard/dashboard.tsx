@@ -5,8 +5,8 @@ import styles from './dashboard.module.scss';
 import ToolBar from '../../elements/toolBar/toolbar';
 import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
+import FileList from '../../elements/fileList/fileList';
 import Recommendations from '../../elements/recommendations/recommendations';
-import StorageStats from '../../elements/storageStats/storageStats';
 
 interface DashboardProps {
     onLogout: () => void;
@@ -15,6 +15,7 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         loadUser();
@@ -38,6 +39,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             setLoading(false);
         }
     };
+
+    const handleFileUploaded = () => {
+        // Обновляем список файлов после загрузки
+        setRefreshTrigger(prev => prev + 1);
+    };
     
     if (loading) {
         return (
@@ -52,31 +58,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <ToolBar>
                 <SearchBar></SearchBar>
                 <div className={styles.container} style={{"marginTop": "60px"}}>
-                                    <StorageStats 
-                diskUsed={11.91}
-                diskTotal={9.76}
-                filesByType={{
-                    documents: 45,
-                    images: 999,
-                    videos: 8,
-                    other: 23
-                }}
-                />
-                    <Recommendations files={[
-                        { filename: "Client interview...", extension: "DOCX", lastAccess: "Just added • Dropbox" },
-                        { filename: "Vaccine Statistics.xls", extension: "XLS", lastAccess: "45m ago • Local Computer" },
-                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" },
-                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" }
-                        ]} />
-
-                    <Recommendations files={[
-                        { filename: "Client interview...", extension: "DOCX", lastAccess: "Just added • Dropbox" },
-                        { filename: "Vaccine Statistics.xls", extension: "XLS", lastAccess: "45m ago • Local Computer" },
-                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" },
-                        { filename: "E-Certificate.pdf", extension: "PDF", lastAccess: "1d ago" }
-                        ]} title='Recent'/>
+                    {/* Недавние файлы */}
+                    <Recommendations refreshTrigger={refreshTrigger} />
+                    
+                    {/* Список всех файлов */}
+                    <FileList refreshTrigger={refreshTrigger} />
                 </div>
-                <ManageFiles></ManageFiles>
+                <ManageFiles onFileUploaded={handleFileUploaded} />
             </ToolBar>        
         </div>
     );

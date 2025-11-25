@@ -1,17 +1,62 @@
-import styles from './recommendations.module.scss'
-
-interface FileType {
-    filename: string,
-    extension: string,
-    lastAccess: string
-}
+import { useEffect, useState } from 'react';
+import type { FileMetadata } from '../../types/file';
+import { fileService } from '../../services/fileService';
+import styles from './recommendations.module.scss';
 
 interface RecommendationsProps {
-    files: FileType[],
-    title?: string
+    title?: string;
+    refreshTrigger?: number;
 }
 
-export default function Recommendations({ files, title = "Suggest from your activity" }: RecommendationsProps) {
+export default function Recommendations({ title = "Recent files", refreshTrigger }: RecommendationsProps) {
+    const [files, setFiles] = useState<FileMetadata[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadRecentFiles();
+    }, [refreshTrigger]);
+
+    const loadRecentFiles = async () => {
+        try {
+            setLoading(true);
+            const recentFiles = await fileService.getRecentFiles();
+            setFiles(recentFiles);
+        } catch (error) {
+            console.error('Failed to load recent files:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getFileExtension = (filename: string): string => {
+        const ext = filename.split('.').pop();
+        return ext ? ext.toUpperCase() : 'FILE';
+    };
+
+    const getTimeAgo = (dateString: string): string => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays === 1) return '1d ago';
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString();
+    };
+
+    const handleDownload = async (file: FileMetadata) => {
+        try {
+            await fileService.downloadFile(file.id, file.original_name);
+        } catch (error) {
+            console.error('Failed to download file:', error);
+        }
+    };
+    
     const getFileIcon = (extension: string) => {
         const ext = extension.toUpperCase();
         
@@ -57,30 +102,43 @@ export default function Recommendations({ files, title = "Suggest from your acti
         }
     };
 
+    if (files.length === 0 && !loading) {
+        return null; // Не показываем секцию, если нет недавних файлов
+    }
+
     return (
         <div className={styles.recommendations}>
             <div className={styles.header}>
                 <h3>{title}</h3>
             </div>
             
-            <div className={styles.filesList}>
-                {files.map((file, index) => (
-                    <div key={index} className={styles.fileCard}>
-                        {getFileIcon(file.extension)}
-                        <div className={styles.fileInfo}>
-                            <div className={styles.iconSmall}>
-                                <svg width="16" height="16" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M60 10L90 30L80 60L60 80L40 60L30 30L60 10Z" stroke="#3B82F6" strokeWidth="3" fill="none"/>
-                                </svg>
-                            </div>
-                            <div className={styles.fileDetails}>
-                                <div className={styles.fileName}>{file.filename}</div>
-                                <div className={styles.fileTime}>{file.lastAccess}</div>
+            {loading ? (
+                <div className={styles.loading}>Loading...</div>
+            ) : (
+                <div className={styles.filesList}>
+                    {files.map((file) => (
+                        <div 
+                            key={file.id} 
+                            className={styles.fileCard}
+                            onClick={() => handleDownload(file)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {getFileIcon(getFileExtension(file.original_name))}
+                            <div className={styles.fileInfo}>
+                                <div className={styles.iconSmall}>
+                                    <svg width="16" height="16" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M60 10L90 30L80 60L60 80L40 60L30 30L60 10Z" stroke="#3B82F6" strokeWidth="3" fill="none"/>
+                                    </svg>
+                                </div>
+                                <div className={styles.fileDetails}>
+                                    <div className={styles.fileName}>{file.original_name}</div>
+                                    <div className={styles.fileTime}>{getTimeAgo(file.created_at)}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

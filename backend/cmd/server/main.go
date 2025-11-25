@@ -33,9 +33,20 @@ func main() {
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(corsConfig))
 
+	// Repositories
 	userRepo := repositories.NewUserRepository(db)
+	fileRepo := repositories.NewFileRepository(db)
+
+	// Services
 	authService := services.NewAuthService(userRepo, cfg)
+	fileService, err := services.NewFileService(fileRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
+	if err != nil {
+		log.Fatalf("Failed to initialize file service: %v", err)
+	}
+
+	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	fileHandler := handlers.NewFileHandler(fileService)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -56,12 +67,26 @@ func main() {
 		protected.Use(middleware.AuthMiddleware(authService))
 		{
 			protected.GET("/auth/me", authHandler.GetMe)
+
+			// File routes
+			protected.POST("/files/upload", fileHandler.Upload)
+			protected.GET("/files", fileHandler.GetUserFiles)
+			protected.GET("/files/recent", fileHandler.GetRecentFiles)
+			protected.GET("/files/:id/download", fileHandler.DownloadFile)
+			protected.DELETE("/files/:id", fileHandler.DeleteFile)
 		}
+	}
+
+	// Логируем все зарегистрированные роуты
+	log.Println("📋 Registered routes:")
+	for _, route := range r.Routes() {
+		log.Printf("   %s %s", route.Method, route.Path)
 	}
 
 	log.Printf("🚀 Server starting on port %s...", cfg.Server.Port)
 	log.Printf("📍 Environment: %s", cfg.Server.Env)
 	log.Printf("🌐 CORS allowed origins: %v", cfg.CORS.AllowedOrigins)
+	log.Printf("💾 Storage path: %s", cfg.Storage.Path)
 
 	if err := r.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

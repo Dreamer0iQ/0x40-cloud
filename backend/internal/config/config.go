@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	CORS     CORSConfig
+	Storage  StorageConfig
 }
 
 type ServerConfig struct {
@@ -36,6 +37,11 @@ type JWTConfig struct {
 
 type CORSConfig struct {
 	AllowedOrigins []string
+}
+
+type StorageConfig struct {
+	Path          string
+	EncryptionKey string
 }
 
 func Load() *Config {
@@ -62,6 +68,10 @@ func Load() *Config {
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:5173"), ","),
+		},
+		Storage: StorageConfig{
+			Path:          getEnv("STORAGE_PATH", "./storage"),
+			EncryptionKey: getEnv("ENCRYPTION_KEY", "12345678901234567890123456789012"), // ДОЛЖЕН БЫТЬ 32 байта!
 		},
 	}
 }
