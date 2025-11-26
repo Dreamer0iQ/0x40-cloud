@@ -38,7 +38,7 @@ func (h *FileHandler) Upload(c *gin.Context) {
 	if virtualPath == "" {
 		virtualPath = "/"
 	}
-	
+
 	folderName := c.PostForm("folder_name")
 
 	uploadedFile, err := h.fileService.UploadFileWithPath(userID.(uint), file, virtualPath, folderName)
