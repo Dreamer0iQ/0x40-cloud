@@ -17,6 +17,8 @@ type File struct {
 	Filename      string `gorm:"not null" json:"filename"`
 	OriginalName  string `gorm:"not null" json:"original_name"`
 	Path          string `gorm:"not null;index" json:"path"`           // Путь к зашифрованному файлу на диске
+	VirtualPath   string `gorm:"default:'/'" json:"virtual_path"`      // Виртуальный путь к файлу (например, /folder1/subfolder/)
+	FolderName    string `gorm:"default:''" json:"folder_name"`        // Имя виртуальной папки, если файл загружен как часть папки
 	SHA256        string `gorm:"not null;index;size:64" json:"sha256"` // SHA256 хеш оригинального файла
 	MimeType      string `json:"mime_type"`
 	Size          int64  `gorm:"not null" json:"size"`           // Размер оригинального файла

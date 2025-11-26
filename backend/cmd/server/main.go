@@ -73,6 +73,7 @@ func main() {
 			protected.GET("/files", fileHandler.GetUserFiles)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)
+			protected.PATCH("/files/:id/rename", fileHandler.RenameFile)
 			protected.DELETE("/files/:id", fileHandler.DeleteFile)
 		}
 	}

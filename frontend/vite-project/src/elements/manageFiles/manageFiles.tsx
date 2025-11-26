@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import styles from './manageFiles.module.scss';
 import { fileService } from '../../services/fileService';
+import FolderNameModal from '../folderNameModal/folderNameModal';
 
 interface ManageFilesProps {
     onFileUploaded?: () => void;
@@ -11,17 +12,70 @@ export default function ManageFiles({ onFileUploaded }: ManageFilesProps) {
     const folderInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [showFolderModal, setShowFolderModal] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const [defaultFolderName, setDefaultFolderName] = useState('');
 
-    const handleFileUpload = async (files: FileList | null) => {
+    const handleFileUpload = async (files: FileList | null, isFolder: boolean = false) => {
         if (!files || files.length === 0) return;
+
+        const fileArray = Array.from(files);
+
+        if (isFolder && fileArray.length > 0) {
+            // Загрузка папки - показываем модальное окно для ввода имени
+            const firstFilePath = (fileArray[0] as any).webkitRelativePath || fileArray[0].name;
+            const pathParts = firstFilePath.split('/');
+            const detectedFolderName = pathParts.length > 1 ? pathParts[0] : 'My Folder';
+            
+            // Сохраняем файлы и показываем модальное окно
+            setPendingFiles(fileArray);
+            setDefaultFolderName(detectedFolderName);
+            setShowFolderModal(true);
+        } else {
+            // Загрузка обычных файлов без модального окна
+            await uploadFiles(fileArray, false);
+        }
+    };
+
+    const handleFolderNameConfirm = async (folderName: string) => {
+        setShowFolderModal(false);
+        await uploadFiles(pendingFiles, true, folderName);
+        setPendingFiles([]);
+    };
+
+    const handleFolderNameCancel = () => {
+        setShowFolderModal(false);
+        setPendingFiles([]);
+        // Сбрасываем input
+        if (folderInputRef.current) {
+            folderInputRef.current.value = '';
+        }
+    };
+
+    const uploadFiles = async (fileArray: File[], isFolder: boolean = false, customFolderName?: string) => {
+        if (fileArray.length === 0) return;
 
         setIsUploading(true);
         setUploadProgress(0);
 
         try {
-            const fileArray = Array.from(files);
-            
-            if (fileArray.length === 1) {
+            if (isFolder) {
+                const folderName = customFolderName || 'Uploaded Folder';
+                
+                console.log(`📁 Uploading folder: "${folderName}" with ${fileArray.length} files`);
+                
+                // Загрузка папки с сохранением структуры
+                let completedFiles = 0;
+                await fileService.uploadFolder(fileArray, folderName, (_fileIndex, progress) => {
+                    if (progress === 100) {
+                        completedFiles++;
+                    }
+                    const totalProgress = Math.round((completedFiles / fileArray.length) * 100);
+                    setUploadProgress(totalProgress);
+                });
+                
+                console.log(`✅ Folder "${folderName}" uploaded successfully`);
+            } else if (fileArray.length === 1) {
                 // Загрузка одного файла
                 await fileService.uploadFile(fileArray[0], (progress) => {
                     setUploadProgress(progress);
@@ -72,7 +126,7 @@ export default function ManageFiles({ onFileUploaded }: ManageFilesProps) {
                 type="file"
                 multiple
                 style={{ display: 'none' }}
-                onChange={(e) => handleFileUpload(e.target.files)}
+                onChange={(e) => handleFileUpload(e.target.files, false)}
             />
             <input
                 ref={folderInputRef}
@@ -81,7 +135,7 @@ export default function ManageFiles({ onFileUploaded }: ManageFilesProps) {
                 // @ts-ignore - webkitdirectory is not in the types but supported by browsers
                 webkitdirectory="true"
                 style={{ display: 'none' }}
-                onChange={(e) => handleFileUpload(e.target.files)}
+                onChange={(e) => handleFileUpload(e.target.files, true)}
             />
 
             {/* Прогресс загрузки */}
@@ -133,6 +187,14 @@ export default function ManageFiles({ onFileUploaded }: ManageFilesProps) {
                 </svg>
                 <span>New shared folder</span>
             </button>
+
+            {/* Модальное окно для ввода имени папки */}
+            <FolderNameModal
+                isOpen={showFolderModal}
+                defaultName={defaultFolderName}
+                onConfirm={handleFolderNameConfirm}
+                onCancel={handleFolderNameCancel}
+            />
         </section>
     )
 }

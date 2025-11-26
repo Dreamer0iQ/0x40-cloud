@@ -58,7 +58,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 <SearchBar></SearchBar>
                 <div className={styles.container} style={{"marginTop": "60px"}}>
                     {/* Недавние файлы */}
-                    <Recommendations refreshTrigger={refreshTrigger} limit={10} />
+                    <Recommendations refreshTrigger={refreshTrigger} limit={4} />
                     
                     {/* Список всех файлов */}
                     {/* <FileList refreshTrigger={refreshTrigger} /> */}

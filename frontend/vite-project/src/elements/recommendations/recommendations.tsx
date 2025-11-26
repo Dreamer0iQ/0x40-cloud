@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { FileMetadata } from '../../types/file';
 import { fileService } from '../../services/fileService';
 import styles from './recommendations.module.scss';
+import FileContextMenu from '../fileContextMenu/fileContextMenu';
 
 interface RecommendationsProps {
     title?: string;
@@ -12,6 +13,10 @@ interface RecommendationsProps {
 export default function Recommendations({ title = "Recent files", refreshTrigger, limit = 5 }: RecommendationsProps) {
     const [files, setFiles] = useState<FileMetadata[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeMenuFileId, setActiveMenuFileId] = useState<string | null>(null);
+    const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>();
+    const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
+    const [newFileName, setNewFileName] = useState('');
 
     useEffect(() => {
         loadRecentFiles();
@@ -56,6 +61,67 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
         } catch (error) {
             console.error('Failed to download file:', error);
         }
+    };
+
+    const handleMenuOpen = (e: React.MouseEvent, fileId: string) => {
+        e.stopPropagation();
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setMenuPosition({ x: rect.left, y: rect.bottom + 5 });
+        setActiveMenuFileId(fileId);
+    };
+
+    const handleMenuClose = () => {
+        setActiveMenuFileId(null);
+        setMenuPosition(undefined);
+    };
+
+    const handleRename = () => {
+        if (activeMenuFileId) {
+            const file = files.find(f => f.id === activeMenuFileId);
+            if (file) {
+                setNewFileName(file.original_name);
+                setRenamingFileId(activeMenuFileId);
+            }
+        }
+        handleMenuClose();
+    };
+
+    const handleDelete = async () => {
+        if (activeMenuFileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                try {
+                    await fileService.deleteFile(activeMenuFileId);
+                    await loadRecentFiles();
+                } catch (error) {
+                    console.error('Failed to delete file:', error);
+                    alert('Failed to delete file');
+                }
+            }
+        }
+        handleMenuClose();
+    };
+
+    const handleRenameSubmit = async (fileId: string) => {
+        if (!newFileName.trim()) {
+            setRenamingFileId(null);
+            return;
+        }
+
+        try {
+            await fileService.renameFile(fileId, newFileName.trim());
+            console.log('✅ File renamed successfully');
+            setRenamingFileId(null);
+            await loadRecentFiles(); // Обновляем список
+        } catch (error) {
+            console.error('Failed to rename file:', error);
+            alert('Failed to rename file');
+            setRenamingFileId(null);
+        }
+    };
+
+    const handleRenameCancel = () => {
+        setRenamingFileId(null);
+        setNewFileName('');
     };
     
     const getFileIcon = (extension: string) => {
@@ -121,10 +187,25 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                         <div 
                             key={file.id} 
                             className={styles.fileCard}
-                            onClick={() => handleDownload(file)}
-                            style={{ cursor: 'pointer' }}
                         >
-                            {getFileIcon(getFileExtension(file.original_name))}
+                            <div 
+                                className={`${styles.fileIconContainer} ${activeMenuFileId === file.id ? styles.menuOpen : ''}`}
+                            >
+                                <div onClick={() => handleDownload(file)} style={{ cursor: 'pointer' }}>
+                                    {getFileIcon(getFileExtension(file.original_name))}
+                                </div>
+                                <button
+                                    className={styles.moreButton}
+                                    onClick={(e) => handleMenuOpen(e, file.id)}
+                                    aria-label="More options"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="12" cy="5" r="2" fill="currentColor"/>
+                                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                                        <circle cx="12" cy="19" r="2" fill="currentColor"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <div className={styles.fileInfo}>
                                 <div className={styles.iconSmall}>
                                     <svg width="16" height="16" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -132,10 +213,33 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                                     </svg>
                                 </div>
                                 <div className={styles.fileDetails}>
-                                    <div className={styles.fileName}>{file.original_name.slice(0, 30)+" ..."}</div>
+                                    {renamingFileId === file.id ? (
+                                        <input
+                                            type="text"
+                                            className={styles.renameInput}
+                                            value={newFileName}
+                                            onChange={(e) => setNewFileName(e.target.value)}
+                                            onBlur={() => handleRenameSubmit(file.id)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleRenameSubmit(file.id);
+                                                if (e.key === 'Escape') handleRenameCancel();
+                                            }}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <div className={styles.fileName}>{file.original_name.slice(0, 30)}{file.original_name.length > 30 ? '...' : ''}</div>
+                                    )}
                                     <div className={styles.fileTime}>{getTimeAgo(file.created_at)}</div>
                                 </div>
                             </div>
+
+                            <FileContextMenu
+                                isOpen={activeMenuFileId === file.id}
+                                onClose={handleMenuClose}
+                                onRename={handleRename}
+                                onDelete={handleDelete}
+                                position={menuPosition}
+                            />
                         </div>
                     ))}
                 </div>

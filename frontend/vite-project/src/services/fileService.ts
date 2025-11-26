@@ -3,9 +3,21 @@ import type { FileUploadResponse, FileListResponse, FileMetadata } from '../type
 
 export const fileService = {
   // Загрузить файл
-  uploadFile: async (file: File, onProgress?: (progress: number) => void): Promise<FileUploadResponse> => {
+  uploadFile: async (
+    file: File, 
+    onProgress?: (progress: number) => void,
+    virtualPath?: string,
+    folderName?: string
+  ): Promise<FileUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
+    
+    if (virtualPath) {
+      formData.append('virtual_path', virtualPath);
+    }
+    if (folderName) {
+      formData.append('folder_name', folderName);
+    }
 
     const response = await api.post<FileUploadResponse>('/files/upload', formData, {
       headers: {
@@ -25,13 +37,52 @@ export const fileService = {
   // Загрузить несколько файлов
   uploadFiles: async (
     files: File[],
-    onProgress?: (fileIndex: number, progress: number) => void
+    onProgress?: (fileIndex: number, progress: number) => void,
+    virtualPath?: string,
+    folderName?: string
   ): Promise<FileUploadResponse[]> => {
     const uploadPromises = files.map((file, index) =>
       fileService.uploadFile(file, (progress) => {
         onProgress?.(index, progress);
-      })
+      }, virtualPath, folderName)
     );
+
+    return Promise.all(uploadPromises);
+  },
+
+  // Загрузить папку (с сохранением структуры)
+  uploadFolder: async (
+    files: File[],
+    folderName: string,
+    onProgress?: (fileIndex: number, progress: number) => void
+  ): Promise<FileUploadResponse[]> => {
+    console.log(`📦 Starting upload of folder "${folderName}" with ${files.length} files`);
+    
+    const uploadPromises = files.map((file, index) => {
+      // Извлекаем относительный путь из webkitRelativePath
+      // Пример: "MyFolder/subfolder/file.txt"
+      const relativePath = (file as any).webkitRelativePath || file.name;
+      const pathParts = relativePath.split('/');
+      
+      // Убираем имя файла, оставляем только путь к папке
+      // Например, из ["MyFolder", "subfolder", "file.txt"] получаем ["MyFolder", "subfolder"]
+      const fileName = pathParts.pop();
+      
+      // Создаем виртуальный путь
+      // Например: "/MyFolder/subfolder/"
+      const virtualPath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
+      
+      console.log(`  📄 File ${index + 1}/${files.length}: ${fileName} -> ${virtualPath}`);
+      
+      return fileService.uploadFile(
+        file,
+        (progress) => {
+          onProgress?.(index, progress);
+        },
+        virtualPath,
+        folderName
+      );
+    });
 
     return Promise.all(uploadPromises);
   },
@@ -68,6 +119,11 @@ export const fileService = {
   // Удалить файл
   deleteFile: async (fileId: string): Promise<void> => {
     await api.delete(`/files/${fileId}`);
+  },
+
+  // Переименовать файл
+  renameFile: async (fileId: string, newName: string): Promise<void> => {
+    await api.patch(`/files/${fileId}/rename`, { new_name: newName });
   },
 
   // Получить SHA256 хеш файла на клиенте (для проверки)

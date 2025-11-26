@@ -207,6 +207,11 @@ func (s *FileService) decryptFile(srcPath string, dst io.Writer) error {
 
 // UploadFile загружает и шифрует файл
 func (s *FileService) UploadFile(userID uint, fileHeader *multipart.FileHeader) (*models.File, error) {
+	return s.UploadFileWithPath(userID, fileHeader, "/", "")
+}
+
+// UploadFileWithPath загружает и шифрует файл с указанием виртуального пути
+func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.FileHeader, virtualPath, folderName string) (*models.File, error) {
 	// Открываем файл
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -246,6 +251,14 @@ func (s *FileService) UploadFile(userID uint, fileHeader *multipart.FileHeader) 
 		encryptedSize = fileInfo.Size()
 	}
 
+	// Нормализуем виртуальный путь
+	if virtualPath == "" {
+		virtualPath = "/"
+	}
+	if virtualPath[len(virtualPath)-1] != '/' {
+		virtualPath += "/"
+	}
+
 	// Создаем запись в БД
 	fileModel := &models.File{
 		ID:            uuid.New(),
@@ -253,6 +266,8 @@ func (s *FileService) UploadFile(userID uint, fileHeader *multipart.FileHeader) 
 		Filename:      uuid.New().String() + filepath.Ext(fileHeader.Filename),
 		OriginalName:  fileHeader.Filename,
 		Path:          storagePath,
+		VirtualPath:   virtualPath,
+		FolderName:    folderName,
 		SHA256:        sha256Hash,
 		MimeType:      fileHeader.Header.Get("Content-Type"),
 		Size:          fileHeader.Size,
@@ -333,4 +348,28 @@ func (s *FileService) DeleteFile(fileID uuid.UUID, userID uint) error {
 	}
 
 	return nil
+}
+
+// RenameFile переименовывает файл (меняет только original_name)
+func (s *FileService) RenameFile(fileID uuid.UUID, userID uint, newName string) (*models.File, error) {
+	// Проверяем права доступа
+	file, err := s.GetFile(fileID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Валидация имени файла
+	if newName == "" {
+		return nil, fmt.Errorf("new name cannot be empty")
+	}
+
+	// Обновляем только оригинальное имя
+	file.OriginalName = newName
+
+	// Сохраняем изменения
+	if err := s.fileRepo.Update(file); err != nil {
+		return nil, fmt.Errorf("failed to rename file: %w", err)
+	}
+
+	return file, nil
 }

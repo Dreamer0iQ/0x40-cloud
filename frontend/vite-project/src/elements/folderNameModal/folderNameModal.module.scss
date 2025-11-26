@@ -1,0 +1,172 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.title {
+    margin: 0 0 24px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+
+    &:focus {
+        border-color: #007aff;
+        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+    }
+
+    &::placeholder {
+        color: #999;
+    }
+}
+
+.buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cancelButton,
+.confirmButton {
+    flex: 1;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+.cancelButton {
+    background: #f5f5f5;
+    color: #666;
+
+    &:hover {
+        background: #e8e8e8;
+    }
+}
+
+.confirmButton {
+    background: #007aff;
+    color: white;
+
+    &:hover {
+        background: #0066dd;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    &:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        box-shadow: none;
+        
+        &:hover {
+            background: #cccccc;
+        }
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .modal {
+        background: #2c2c2c;
+    }
+
+    .title {
+        color: #ffffff;
+    }
+
+    .input {
+        background: #1a1a1a;
+        border-color: #444;
+        color: #ffffff;
+
+        &:focus {
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.2);
+        }
+
+        &::placeholder {
+            color: #666;
+        }
+    }
+
+    .cancelButton {
+        background: #3a3a3a;
+        color: #e0e0e0;
+
+        &:hover {
+            background: #454545;
+        }
+    }
+
+    .confirmButton {
+        background: #0a84ff;
+
+        &:hover {
+            background: #0070e0;
+        }
+
+        &:disabled {
+            background: #555;
+        }
+    }
+}
