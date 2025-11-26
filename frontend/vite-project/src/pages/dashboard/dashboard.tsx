@@ -5,7 +5,6 @@ import styles from './dashboard.module.scss';
 import ToolBar from '../../elements/toolBar/toolbar';
 import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
-import FileList from '../../elements/fileList/fileList';
 import Recommendations from '../../elements/recommendations/recommendations';
 
 interface DashboardProps {
@@ -59,10 +58,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 <SearchBar></SearchBar>
                 <div className={styles.container} style={{"marginTop": "60px"}}>
                     {/* Недавние файлы */}
-                    <Recommendations refreshTrigger={refreshTrigger} />
+                    <Recommendations refreshTrigger={refreshTrigger} limit={10} />
                     
                     {/* Список всех файлов */}
-                    <FileList refreshTrigger={refreshTrigger} />
+                    {/* <FileList refreshTrigger={refreshTrigger} /> */}
                 </div>
                 <ManageFiles onFileUploaded={handleFileUploaded} />
             </ToolBar>        

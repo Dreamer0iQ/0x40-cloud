@@ -43,8 +43,8 @@ export const fileService = {
   },
 
   // Получить недавние файлы
-  getRecentFiles: async (): Promise<FileMetadata[]> => {
-    const response = await api.get<FileListResponse>('/files/recent');
+  getRecentFiles: async (limit: number = 4): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>(`/files/recent?limit=${limit}`);
     return response.data.files || [];
   },
 

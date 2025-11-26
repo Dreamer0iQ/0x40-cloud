@@ -6,20 +6,21 @@ import styles from './recommendations.module.scss';
 interface RecommendationsProps {
     title?: string;
     refreshTrigger?: number;
+    limit?: number; // Количество файлов для отображения
 }
 
-export default function Recommendations({ title = "Recent files", refreshTrigger }: RecommendationsProps) {
+export default function Recommendations({ title = "Recent files", refreshTrigger, limit = 5 }: RecommendationsProps) {
     const [files, setFiles] = useState<FileMetadata[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadRecentFiles();
-    }, [refreshTrigger]);
+    }, [refreshTrigger, limit]); // Перезагружаем при изменении refreshTrigger или limit
 
     const loadRecentFiles = async () => {
         try {
             setLoading(true);
-            const recentFiles = await fileService.getRecentFiles();
+            const recentFiles = await fileService.getRecentFiles(limit);
             setFiles(recentFiles);
         } catch (error) {
             console.error('Failed to load recent files:', error);
@@ -131,7 +132,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                                     </svg>
                                 </div>
                                 <div className={styles.fileDetails}>
-                                    <div className={styles.fileName}>{file.original_name}</div>
+                                    <div className={styles.fileName}>{file.original_name.slice(0, 30)+" ..."}</div>
                                     <div className={styles.fileTime}>{getTimeAgo(file.created_at)}</div>
                                 </div>
                             </div>

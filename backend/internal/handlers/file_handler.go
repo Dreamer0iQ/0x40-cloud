@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/bhop_dynasty/0x40_cloud/internal/services"
 	"github.com/gin-gonic/gin"
@@ -71,8 +72,14 @@ func (h *FileHandler) GetRecentFiles(c *gin.Context) {
 		return
 	}
 
-	// Получаем последние 5 файлов по умолчанию
+	// Получаем параметр limit из query, по умолчанию 5
 	limit := 5
+	if limitParam := c.Query("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
 	files, err := h.fileService.GetRecentFiles(userID.(uint), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
