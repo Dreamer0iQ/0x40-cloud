@@ -99,6 +99,12 @@ export const fileService = {
     return response.data.files || [];
   },
 
+  // Получить рекомендованные файлы (на основе активности)
+  getSuggestedFiles: async (limit: number = 4): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>(`/files/suggested?limit=${limit}`);
+    return response.data.files || [];
+  },
+
   // Скачать файл
   downloadFile: async (fileId: string, filename: string): Promise<void> => {
     const response = await api.get(`/files/${fileId}/download`, {

@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+server
+
+# Test files
+*_test.go
+testdata/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storage (не включаем в образ, монтируем volume)
+storage/*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+!README.md
+
+# Scripts
+scripts/
+*.sh
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

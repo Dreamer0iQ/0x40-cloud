@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -11,12 +13,14 @@ import (
 )
 
 type FileHandler struct {
-	fileService *services.FileService
+	fileService     *services.FileService
+	activityService *services.ActivityService
 }
 
-func NewFileHandler(fileService *services.FileService) *FileHandler {
+func NewFileHandler(fileService *services.FileService, activityService *services.ActivityService) *FileHandler {
 	return &FileHandler{
-		fileService: fileService,
+		fileService:     fileService,
+		activityService: activityService,
 	}
 }
 
@@ -120,6 +124,18 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// Записываем активность в Redis (не блокируем, если не получилось)
+	go func() {
+		if h.activityService != nil {
+			ctx := context.Background()
+			if err := h.activityService.RecordActivity(ctx, userID.(uint), fileID, services.ActivityDownload); err != nil {
+				log.Printf("⚠️ Failed to record download activity: %v", err)
+			} else {
+				log.Printf("✓ Recorded download activity for user %d, file %s", userID.(uint), fileID)
+			}
+		}
+	}()
+
 	// Устанавливаем заголовки для скачивания
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
@@ -186,4 +202,29 @@ func (h *FileHandler) RenameFile(c *gin.Context) {
 		"original_name": file.OriginalName,
 		"updated_at":    file.UpdatedAt,
 	})
+}
+
+func (h *FileHandler) GetSuggestedFiles(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Получаем параметр limit из query, по умолчанию 10
+	limit := 10
+	if limitParam := c.Query("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	// Получаем рекомендованные файлы
+	files, err := h.activityService.GetSuggestedFiles(c.Request.Context(), userID.(uint), limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
 }

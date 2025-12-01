@@ -33,6 +33,12 @@ func (r *FileRepository) FindByUserID(userID uint) ([]models.File, error) {
 	return files, err
 }
 
+func (r *FileRepository) FindByIDs(fileIDs []uuid.UUID, userID uint) ([]models.File, error) {
+	var files []models.File
+	err := r.db.Where("id IN ? AND user_id = ?", fileIDs, userID).Find(&files).Error
+	return files, err
+}
+
 func (r *FileRepository) FindRecentByUserID(userID uint, limit int) ([]models.File, error) {
 	var files []models.File
 	err := r.db.Where("user_id = ?", userID).

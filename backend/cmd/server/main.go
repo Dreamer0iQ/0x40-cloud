@@ -21,6 +21,11 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	redisClient, err := config.InitRedis(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis: %v", err)
+	}
+
 	if cfg.Server.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -43,10 +48,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}
+	activityService := services.NewActivityService(redisClient, fileRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
-	fileHandler := handlers.NewFileHandler(fileService)
+	fileHandler := handlers.NewFileHandler(fileService, activityService)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -72,6 +78,7 @@ func main() {
 			protected.POST("/files/upload", fileHandler.Upload)
 			protected.GET("/files", fileHandler.GetUserFiles)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)
+			protected.GET("/files/suggested", fileHandler.GetSuggestedFiles)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)
 			protected.PATCH("/files/:id/rename", fileHandler.RenameFile)
 			protected.DELETE("/files/:id", fileHandler.DeleteFile)

@@ -8,9 +8,10 @@ interface RecommendationsProps {
     title?: string;
     refreshTrigger?: number;
     limit?: number; // Количество файлов для отображения
+    type?: 'recent' | 'suggested'; // Тип: недавние или рекомендованные
 }
 
-export default function Recommendations({ title = "Recent files", refreshTrigger, limit = 5 }: RecommendationsProps) {
+export default function Recommendations({ title = "Recent files", refreshTrigger, limit = 5, type = 'recent' }: RecommendationsProps) {
     const [files, setFiles] = useState<FileMetadata[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeMenuFileId, setActiveMenuFileId] = useState<string | null>(null);
@@ -20,15 +21,18 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
 
     useEffect(() => {
         loadRecentFiles();
-    }, [refreshTrigger, limit]); // Перезагружаем при изменении refreshTrigger или limit
+    }, [refreshTrigger, limit, type]); // Перезагружаем при изменении refreshTrigger, limit или type
 
     const loadRecentFiles = async () => {
         try {
             setLoading(true);
-            const recentFiles = await fileService.getRecentFiles(limit);
-            setFiles(recentFiles);
+            // Выбираем метод в зависимости от типа
+            const files = type === 'suggested' 
+                ? await fileService.getSuggestedFiles(limit)
+                : await fileService.getRecentFiles(limit);
+            setFiles(files);
         } catch (error) {
-            console.error('Failed to load recent files:', error);
+            console.error('Failed to load files:', error);
         } finally {
             setLoading(false);
         }
