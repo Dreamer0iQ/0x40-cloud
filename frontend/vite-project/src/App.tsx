@@ -1,59 +1,44 @@
-import { useEffect, useState, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/login/login';
 import Dashboard from './pages/dashboard/dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 import { authService } from './services/authService';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const checkAuth = useCallback(async () => {
-    if (authService.isAuthenticated()) {
-      try {
-        // Проверяем валидность токена
-        await authService.getMe();
-        setIsAuthenticated(true);
-      } catch (error) {
-        // Токен невалиден
-        authService.logout();
-        setIsAuthenticated(false);
-      }
-    } else {
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // Проверяем авторизацию при загрузке
-    checkAuth();
-  }, [checkAuth]);
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#1E1E1E',
-        color: '#0060FF',
-        fontSize: '1.5rem'
-      }}>
-        Loading...
-      </div>
-    );
-  }
-
-  const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    authService.logout();
+    // Перенаправление будет выполнено автоматически через ProtectedRoute
+    window.location.href = '/login';
   };
 
-  return isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <Login onAuthSuccess={handleAuthSuccess} />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Публичные роуты */}
+        <Route path="/login" element={<Login onAuthSuccess={() => {
+          // Перенаправляем на dashboard после успешного входа
+          window.location.href = '/dashboard';
+        }} />} />
+        
+        {/* Защищенные роуты */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+        
+        {/* Редирект по умолчанию */}
+        <Route path="/" element={
+          authService.isAuthenticated() 
+            ? <Navigate to="/dashboard" replace /> 
+            : <Navigate to="/login" replace />
+        } />
+        
+        {/* 404 - редирект на главную */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
