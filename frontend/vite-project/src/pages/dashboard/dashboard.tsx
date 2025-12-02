@@ -18,9 +18,9 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
     useEffect(() => {
         loadUser();
-        
+
         document.body.style.overflow = 'hidden';
-        
+
         return () => {
             document.body.style.overflow = 'unset';
         };
@@ -43,7 +43,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         // Обновляем список файлов после загрузки
         setRefreshTrigger(prev => prev + 1);
     };
-    
+
     if (loading) {
         return (
             <div className={styles.container}>
@@ -56,28 +56,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         <div className={styles.dashboardWrapper}>
             <ToolBar>
                 <SearchBar></SearchBar>
-                <div className={styles.container} style={{"marginTop": "60px"}}>
+                <div className={styles.container} style={{ "marginTop": "60px" }}>
                     {/* Недавние файлы */}
-                    <Recommendations 
-                        title="Recent files" 
-                        type="recent" 
-                        refreshTrigger={refreshTrigger} 
-                        limit={4} 
+                    <Recommendations
+                        title="Recent files"
+                        type="recent"
+                        refreshTrigger={refreshTrigger}
+                        limit={4}
                     />
-                    
+
                     {/* Рекомендованные файлы (на основе активности) */}
-                    <Recommendations 
-                        title="Suggested for you" 
-                        type="suggested" 
-                        refreshTrigger={refreshTrigger} 
-                        limit={4} 
+                    <Recommendations
+                        title="Suggested for you"
+                        type="suggested"
+                        refreshTrigger={refreshTrigger}
+                        limit={4}
                     />
-                    
-                    {/* Список всех файлов */}
-                    {/* <FileList refreshTrigger={refreshTrigger} /> */}
                 </div>
                 <ManageFiles onFileUploaded={handleFileUploaded} />
-            </ToolBar>        
+            </ToolBar>
         </div>
     );
 }

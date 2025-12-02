@@ -321,6 +321,11 @@ func (s *FileService) GetRecentFiles(userID uint, limit int) ([]models.File, err
 	return s.fileRepo.FindRecentByUserID(userID, limit)
 }
 
+// GetFilesByPath получает файлы и папки по виртуальному пути
+func (s *FileService) GetFilesByPath(userID uint, virtualPath string) ([]models.File, error) {
+	return s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+}
+
 // DeleteFile удаляет файл
 func (s *FileService) DeleteFile(fileID uuid.UUID, userID uint) error {
 	file, err := s.GetFile(fileID, userID)

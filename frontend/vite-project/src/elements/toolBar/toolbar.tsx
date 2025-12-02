@@ -1,11 +1,19 @@
 import styles from './toolbar.module.scss'
 import type { ReactNode } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 interface ToolBarProps {
     children?: ReactNode
 }
 
 export default function ToolBar({ children }: ToolBarProps){
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const isActive = (path: string) => {
+        return location.pathname === path;
+    };
+
     return (
         <>
             <div className={styles.toolbar}>
@@ -16,13 +24,21 @@ export default function ToolBar({ children }: ToolBarProps){
                     </svg>
                 </div>
 
-                <button className={`${styles.iconButton} ${styles.active}`}>
+                <button 
+                    className={`${styles.iconButton} ${isActive('/dashboard') ? styles.active : ''}`}
+                    onClick={() => navigate('/dashboard')}
+                    title="Dashboard"
+                >
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.5 42.4998H37.5M7.5 36.4998V30.3253C7.5 27.4535 7.5 26.0175 7.87013 24.6952C8.198 23.5238 8.73682 22.4222 9.46012 21.4442C10.2767 20.3402 11.4101 19.4587 13.6769 17.6956L20.1769 12.64C23.6902 9.90746 25.4468 8.54121 27.3865 8.01601C29.098 7.55261 30.902 7.55261 32.6135 8.01601C34.5532 8.54121 36.3098 9.90748 39.823 12.64L46.323 17.6956C48.59 19.4587 49.7233 20.3402 50.5398 21.4442C51.2633 22.4222 51.802 23.5238 52.1298 24.6952C52.5 26.0175 52.5 27.4535 52.5 30.3253V36.4998C52.5 42.1003 52.5 44.9008 51.41 47.0398C50.4512 48.9213 48.9215 50.4513 47.04 51.41C44.9007 52.4998 42.1005 52.4998 36.5 52.4998H23.5C17.8995 52.4998 15.0992 52.4998 12.9601 51.41C11.0785 50.4513 9.54868 48.9213 8.58993 47.0398C7.5 44.9008 7.5 42.1003 7.5 36.4998Z" stroke="black" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
                 
-                <button className={styles.iconButton}>
+                <button 
+                    className={`${styles.iconButton} ${isActive('/storage') ? styles.active : ''}`}
+                    onClick={() => navigate('/storage')}
+                    title="Storage"
+                >
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M47.5 22.5V44.5C47.5 47.3002 47.5 48.7005 46.955 49.77C46.4757 50.7108 45.7108 51.4757 44.77 51.955C43.7005 52.5 42.3003 52.5 39.5 52.5H20.5C17.6997 52.5 16.2996 52.5 15.2301 51.955C14.2892 51.4757 13.5243 50.7108 13.045 49.77C12.5 48.7005 12.5 47.3002 12.5 44.5V15.5C12.5 12.6997 12.5 11.2996 13.045 10.2301C13.5243 9.28923 14.2892 8.52432 15.2301 8.04497C16.2996 7.5 17.6997 7.5 20.5 7.5H32.5M47.5 22.5L32.5 7.5M47.5 22.5H35C33.6193 22.5 32.5 21.3807 32.5 20V7.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>

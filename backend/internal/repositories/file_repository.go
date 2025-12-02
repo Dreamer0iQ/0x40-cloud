@@ -70,3 +70,77 @@ func (r *FileRepository) Update(file *models.File) error {
 func (r *FileRepository) Delete(id uuid.UUID) error {
 	return r.db.Where("id = ?", id).Delete(&models.File{}).Error
 }
+
+func (r *FileRepository) FindByUserIDAndPath(userID uint, virtualPath string) ([]models.File, error) {
+	var files []models.File
+
+	// Нормализуем путь - он должен заканчиваться на /
+	if virtualPath != "/" && len(virtualPath) > 0 && virtualPath[len(virtualPath)-1] != '/' {
+		virtualPath += "/"
+	}
+
+	// Получаем файлы в текущем пути
+	err := r.db.Where("user_id = ? AND virtual_path = ?", userID, virtualPath).
+		Order("folder_name ASC, original_name ASC").
+		Find(&files).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем уникальные папки первого уровня вложенности
+	// Ищем все пути, которые начинаются с текущего пути, но не равны ему
+	var subPaths []struct {
+		VirtualPath string
+	}
+
+	// Паттерн для поиска: если путь = "/", ищем "/%" но не "/",
+	// если путь = "/ctf/", ищем "/ctf/%" но не "/ctf/"
+	searchPattern := virtualPath + "%"
+
+	err = r.db.Model(&models.File{}).
+		Select("DISTINCT virtual_path").
+		Where("user_id = ? AND virtual_path LIKE ? AND virtual_path != ?", userID, searchPattern, virtualPath).
+		Find(&subPaths).Error
+
+	if err != nil {
+		return files, nil // Возвращаем хотя бы файлы, если не удалось получить папки
+	}
+
+	// Извлекаем уникальные папки первого уровня
+	folderMap := make(map[string]bool)
+	pathLen := len(virtualPath)
+
+	for _, sp := range subPaths {
+		// Извлекаем первую папку после текущего пути
+		subPath := sp.VirtualPath[pathLen:] // Убираем префикс текущего пути
+
+		// Находим первый слэш (это граница папки первого уровня)
+		slashIdx := 0
+		for i, c := range subPath {
+			if c == '/' {
+				slashIdx = i
+				break
+			}
+		}
+
+		if slashIdx > 0 {
+			folderName := subPath[:slashIdx]
+			folderMap[folderName] = true
+		}
+	}
+
+	// Добавляем "виртуальные" записи для папок
+	for folderName := range folderMap {
+		// Создаем виртуальную запись для папки
+		folderFile := models.File{
+			OriginalName: folderName,
+			VirtualPath:  virtualPath,
+			FolderName:   folderName,
+			MimeType:     "inode/directory", // Специальный MIME-тип для папок
+		}
+		files = append(files, folderFile)
+	}
+
+	return files, nil
+}

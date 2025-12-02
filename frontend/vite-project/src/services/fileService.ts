@@ -105,6 +105,14 @@ export const fileService = {
     return response.data.files || [];
   },
 
+  // Получить файлы и папки по виртуальному пути
+  getFilesByPath: async (path: string = '/'): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>(`/files/by-path`, {
+      params: { path }
+    });
+    return response.data.files || [];
+  },
+
   // Скачать файл
   downloadFile: async (fileId: string, filename: string): Promise<void> => {
     const response = await api.get(`/files/${fileId}/download`, {

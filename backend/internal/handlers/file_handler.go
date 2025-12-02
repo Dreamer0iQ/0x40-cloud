@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/bhop_dynasty/0x40_cloud/internal/services"
+	"github.com/bhop_dynasty/0x40_cloud/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -221,6 +222,36 @@ func (h *FileHandler) GetSuggestedFiles(c *gin.Context) {
 
 	// Получаем рекомендованные файлы
 	files, err := h.activityService.GetSuggestedFiles(c.Request.Context(), userID.(uint), limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
+}
+
+func (h *FileHandler) GetFilesByPath(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Получаем путь из query параметра
+	virtualPath := c.Query("path")
+	if virtualPath == "" {
+		virtualPath = "/"
+	}
+
+	// Валидируем и очищаем путь
+	sanitizedPath, err := utils.SanitizePath(virtualPath)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		return
+	}
+
+	// Получаем файлы и папки по пути
+	files, err := h.fileService.GetFilesByPath(userID.(uint), sanitizedPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

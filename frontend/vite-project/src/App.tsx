@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/login/login';
 import Dashboard from './pages/dashboard/dashboard';
+import Storage from './pages/storage/storage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { authService } from './services/authService';
 
@@ -24,6 +25,12 @@ function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/storage" element={
+          <ProtectedRoute>
+            <Storage onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         

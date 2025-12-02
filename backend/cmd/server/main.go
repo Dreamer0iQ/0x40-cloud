@@ -77,6 +77,7 @@ func main() {
 			// File routes
 			protected.POST("/files/upload", fileHandler.Upload)
 			protected.GET("/files", fileHandler.GetUserFiles)
+			protected.GET("/files/by-path", fileHandler.GetFilesByPath)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)
 			protected.GET("/files/suggested", fileHandler.GetSuggestedFiles)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)

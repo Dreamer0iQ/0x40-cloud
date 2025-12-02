@@ -1,0 +1,69 @@
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: nowrap;
+    
+    &::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    }
+}
+
+.breadcrumbItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.breadcrumbLink {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+        color: #0060FF;
+        background: rgba(0, 96, 255, 0.1);
+    }
+    
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+    
+    &.active {
+        color: #FFFFFF;
+        font-weight: 500;
+        cursor: default;
+    }
+    
+    &:disabled {
+        cursor: default;
+    }
+}
+
+.separator {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 12px;
+    user-select: none;
+}
