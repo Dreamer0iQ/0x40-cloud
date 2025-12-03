@@ -41,10 +41,11 @@ func main() {
 	// Repositories
 	userRepo := repositories.NewUserRepository(db)
 	fileRepo := repositories.NewFileRepository(db)
+	starredRepo := repositories.NewStarredFileRepository(db)
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
-	fileService, err := services.NewFileService(fileRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
+	fileService, err := services.NewFileService(fileRepo, starredRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
 	if err != nil {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}
@@ -74,12 +75,16 @@ func main() {
 		{
 			protected.GET("/auth/me", authHandler.GetMe)
 
-			// File routes
+			// File routes - специфичные роуты должны идти ПЕРЕД :id параметрами
 			protected.POST("/files/upload", fileHandler.Upload)
 			protected.GET("/files", fileHandler.GetUserFiles)
 			protected.GET("/files/by-path", fileHandler.GetFilesByPath)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)
 			protected.GET("/files/suggested", fileHandler.GetSuggestedFiles)
+			protected.GET("/files/starred", fileHandler.GetStarredFiles)
+
+			// Роуты с :id параметром должны быть в конце
+			protected.POST("/files/:id/star", fileHandler.ToggleStarred)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)
 			protected.PATCH("/files/:id/rename", fileHandler.RenameFile)
 			protected.DELETE("/files/:id", fileHandler.DeleteFile)

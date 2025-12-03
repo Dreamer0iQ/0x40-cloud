@@ -24,8 +24,6 @@ export default function Storage({ onLogout }: StorageProps) {
 
     useEffect(() => {
         loadUser();
-
-
         return () => {
             document.body.style.overflow = 'unset';
         };
@@ -45,7 +43,6 @@ export default function Storage({ onLogout }: StorageProps) {
     };
 
     const handleFileUploaded = () => {
-        // Обновляем список файлов после загрузки
         setRefreshTrigger(prev => prev + 1);
     };
 

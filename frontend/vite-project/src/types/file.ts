@@ -9,6 +9,7 @@ export interface FileMetadata {
   folder_name: string;
   created_at: string;
   updated_at: string;
+  is_starred?: boolean;
 }
 
 export interface FileUploadResponse {

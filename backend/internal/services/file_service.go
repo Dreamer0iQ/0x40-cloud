@@ -19,11 +19,12 @@ import (
 
 type FileService struct {
 	fileRepo      *repositories.FileRepository
+	starredRepo   *repositories.StarredFileRepository
 	storageDir    string
 	encryptionKey []byte // 32 bytes для AES-256
 }
 
-func NewFileService(fileRepo *repositories.FileRepository, storageDir string, encryptionKey string) (*FileService, error) {
+func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, storageDir string, encryptionKey string) (*FileService, error) {
 	// Убеждаемся, что ключ имеет правильную длину (32 байта для AES-256)
 	key := []byte(encryptionKey)
 	if len(key) != 32 {
@@ -37,6 +38,7 @@ func NewFileService(fileRepo *repositories.FileRepository, storageDir string, en
 
 	return &FileService{
 		fileRepo:      fileRepo,
+		starredRepo:   starredRepo,
 		storageDir:    storageDir,
 		encryptionKey: key,
 	}, nil
@@ -313,17 +315,29 @@ func (s *FileService) DownloadFile(fileID uuid.UUID, userID uint, dst io.Writer)
 
 // GetUserFiles получает список файлов пользователя
 func (s *FileService) GetUserFiles(userID uint) ([]models.File, error) {
-	return s.fileRepo.FindByUserID(userID)
+	files, err := s.fileRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return s.EnrichFilesWithStarred(files, userID)
 }
 
 // GetRecentFiles получает недавние файлы пользователя
 func (s *FileService) GetRecentFiles(userID uint, limit int) ([]models.File, error) {
-	return s.fileRepo.FindRecentByUserID(userID, limit)
+	files, err := s.fileRepo.FindRecentByUserID(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return s.EnrichFilesWithStarred(files, userID)
 }
 
 // GetFilesByPath получает файлы и папки по виртуальному пути
 func (s *FileService) GetFilesByPath(userID uint, virtualPath string) ([]models.File, error) {
-	return s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+	files, err := s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+	if err != nil {
+		return nil, err
+	}
+	return s.EnrichFilesWithStarred(files, userID)
 }
 
 // DeleteFile удаляет файл
@@ -377,4 +391,87 @@ func (s *FileService) RenameFile(fileID uuid.UUID, userID uint, newName string) 
 	}
 
 	return file, nil
+}
+
+// ToggleStarred добавляет или удаляет файл из избранного
+func (s *FileService) ToggleStarred(fileID uuid.UUID, userID uint) (bool, error) {
+	// Проверяем, что файл существует и принадлежит пользователю
+	_, err := s.GetFile(fileID, userID)
+	if err != nil {
+		return false, err
+	}
+
+	// Проверяем текущий статус
+	isStarred, err := s.starredRepo.IsStarred(userID, fileID)
+	if err != nil {
+		return false, fmt.Errorf("failed to check starred status: %w", err)
+	}
+
+	if isStarred {
+		// Убираем из избранного
+		if err := s.starredRepo.Delete(userID, fileID); err != nil {
+			return false, fmt.Errorf("failed to unstar file: %w", err)
+		}
+		return false, nil
+	} else {
+		// Добавляем в избранное
+		starredFile := &models.StarredFile{
+			UserID: userID,
+			FileID: fileID,
+		}
+		if err := s.starredRepo.Create(starredFile); err != nil {
+			return false, fmt.Errorf("failed to star file: %w", err)
+		}
+		return true, nil
+	}
+}
+
+// GetStarredFiles получает все избранные файлы пользователя
+func (s *FileService) GetStarredFiles(userID uint) ([]models.File, error) {
+	files, err := s.starredRepo.FindStarredFilesByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Обогащаем файлы информацией о starred
+	// Для starred файлов устанавливаем IsStarred в true
+	for i := range files {
+		files[i].IsStarred = true
+	}
+	
+	return files, nil
+}
+
+// EnrichFilesWithStarred добавляет информацию о starred к списку файлов
+func (s *FileService) EnrichFilesWithStarred(files []models.File, userID uint) ([]models.File, error) {
+	if len(files) == 0 {
+		return files, nil
+	}
+
+	// Собираем ID файлов
+	fileIDs := make([]uuid.UUID, 0, len(files))
+	for _, file := range files {
+		// Пропускаем виртуальные папки
+		if file.MimeType == "inode/directory" {
+			continue
+		}
+		fileIDs = append(fileIDs, file.ID)
+	}
+
+	if len(fileIDs) == 0 {
+		return files, nil
+	}
+
+	// Получаем карту starred файлов
+	starredMap, err := s.starredRepo.GetStarredMap(userID, fileIDs)
+	if err != nil {
+		return files, fmt.Errorf("failed to get starred map: %w", err)
+	}
+
+	// Обогащаем файлы информацией о starred
+	for i := range files {
+		files[i].IsStarred = starredMap[files[i].ID]
+	}
+
+	return files, nil
 }

@@ -1,10 +1,3 @@
-/**
- * Утилиты для безопасной работы с виртуальными путями
- */
-
-/**
- * Очищает путь от опасных символов и последовательностей
- */
 export const sanitizePath = (path: string): string => {
     if (!path) return '/';
     
@@ -17,9 +10,6 @@ export const sanitizePath = (path: string): string => {
         .trim();
 };
 
-/**
- * Проверяет, является ли путь валидным
- */
 export const isValidPath = (path: string): boolean => {
     if (!path) return true;
     
@@ -70,24 +60,18 @@ export const getPathParts = (path: string): Array<{ name: string; path: string }
         currentPath += '/' + part;
         result.push({
             name: part,
-            path: currentPath + '/' // Ensure trailing slash for consistency
+            path: currentPath + '/' 
         });
     }
     
     return result;
 };
 
-/**
- * Объединяет части пути
- */
 export const joinPath = (...parts: string[]): string => {
     const joined = parts.join('/');
     return normalizePath(joined);
 };
 
-/**
- * Получает родительский путь
- */
 export const getParentPath = (path: string): string => {
     const normalized = normalizePath(path);
     

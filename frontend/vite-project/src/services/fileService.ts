@@ -140,6 +140,18 @@ export const fileService = {
     await api.patch(`/files/${fileId}/rename`, { new_name: newName });
   },
 
+  // Переключить статус избранного
+  toggleStarred: async (fileId: string): Promise<{ is_starred: boolean }> => {
+    const response = await api.post(`/files/${fileId}/star`);
+    return response.data;
+  },
+
+  // Получить избранные файлы
+  getStarredFiles: async (): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>('/files/starred');
+    return response.data.files || [];
+  },
+
   // Получить SHA256 хеш файла на клиенте (для проверки)
   calculateSHA256: async (file: File): Promise<string> => {
     const buffer = await file.arrayBuffer();

@@ -1,7 +1,7 @@
 .fileList {
   padding: 24px;
   width: 100%;
-  // max-width: calc(100% - 300px);
+  padding-top: 18px;
 }
 
 .loading,
@@ -144,6 +144,73 @@
     &[title="Delete"]:hover {
       background-color: rgba(255, 107, 107, 0.1);
       color: #FF6B6B;
+    }
+
+    &.starred {
+      color: #FFD700;
+
+      &:hover {
+        background-color: rgba(255, 215, 0, 0.1);
+        color: #FFD700;
+      }
+    }
+  }
+}
+
+.renameInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  input {
+    flex: 1;
+    padding: 6px 12px;
+    background-color: #2A2A2A;
+    border: 1px solid #3A3A3A;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #4A9EFF;
+      background-color: #1E1E1E;
+    }
+  }
+
+  .saveBtn,
+  .cancelBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .saveBtn {
+    background-color: rgba(74, 158, 255, 0.1);
+    color: #4A9EFF;
+
+    &:hover {
+      background-color: #4A9EFF;
+      color: #FFFFFF;
+    }
+  }
+
+  .cancelBtn {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: #FF6B6B;
+
+    &:hover {
+      background-color: #FF6B6B;
+      color: #FFFFFF;
     }
   }
 }

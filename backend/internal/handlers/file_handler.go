@@ -259,3 +259,47 @@ func (h *FileHandler) GetFilesByPath(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }
+
+// ToggleStarred добавляет или удаляет файл из избранного
+func (h *FileHandler) ToggleStarred(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fileIDStr := c.Param("id")
+	fileID, err := uuid.Parse(fileIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file ID"})
+		return
+	}
+
+	isStarred, err := h.fileService.ToggleStarred(fileID, userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"is_starred": isStarred,
+		"message":    fmt.Sprintf("file %s", map[bool]string{true: "starred", false: "unstarred"}[isStarred]),
+	})
+}
+
+// GetStarredFiles получает все избранные файлы пользователя
+func (h *FileHandler) GetStarredFiles(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	files, err := h.fileService.GetStarredFiles(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
+}

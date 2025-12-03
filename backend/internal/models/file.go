@@ -24,7 +24,8 @@ type File struct {
 	Size          int64  `gorm:"not null" json:"size"`           // Размер оригинального файла
 	EncryptedSize int64  `gorm:"not null" json:"encrypted_size"` // Размер зашифрованного файла
 
-	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	User      User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	IsStarred bool `gorm:"-" json:"is_starred"` // Не сохраняется в БД, вычисляется динамически
 }
 
 type FileUploadResponse struct {

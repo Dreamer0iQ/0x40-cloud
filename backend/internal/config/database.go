@@ -49,6 +49,7 @@ func runMigrations(db *gorm.DB) error {
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.File{},
+		&models.StarredFile{},
 	); err != nil {
 		return err
 	}
