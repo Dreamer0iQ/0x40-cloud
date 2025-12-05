@@ -4,14 +4,14 @@ import type { FileUploadResponse, FileListResponse, FileMetadata } from '../type
 export const fileService = {
   // Загрузить файл
   uploadFile: async (
-    file: File, 
+    file: File,
     onProgress?: (progress: number) => void,
     virtualPath?: string,
     folderName?: string
   ): Promise<FileUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     if (virtualPath) {
       formData.append('virtual_path', virtualPath);
     }
@@ -57,23 +57,23 @@ export const fileService = {
     onProgress?: (fileIndex: number, progress: number) => void
   ): Promise<FileUploadResponse[]> => {
     console.log(`📦 Starting upload of folder "${folderName}" with ${files.length} files`);
-    
+
     const uploadPromises = files.map((file, index) => {
       // Извлекаем относительный путь из webkitRelativePath
       // Пример: "MyFolder/subfolder/file.txt"
       const relativePath = (file as any).webkitRelativePath || file.name;
       const pathParts = relativePath.split('/');
-      
+
       // Убираем имя файла, оставляем только путь к папке
       // Например, из ["MyFolder", "subfolder", "file.txt"] получаем ["MyFolder", "subfolder"]
       const fileName = pathParts.pop();
-      
+
       // Создаем виртуальный путь
       // Например: "/MyFolder/subfolder/"
       const virtualPath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
-      
+
       console.log(`  📄 File ${index + 1}/${files.length}: ${fileName} -> ${virtualPath}`);
-      
+
       return fileService.uploadFile(
         file,
         (progress) => {
@@ -170,5 +170,27 @@ export const fileService = {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  },
+
+  // Получить удаленные файлы (Trash)
+  getDeletedFiles: async (): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>('/files/trash');
+    return response.data.files || [];
+  },
+
+  // Восстановить файл
+  restoreFile: async (fileId: string): Promise<void> => {
+    await api.post(`/files/${fileId}/restore`);
+  },
+
+  // Удалить файл навсегда
+  deleteFilePermanently: async (fileId: string): Promise<void> => {
+    await api.delete(`/files/${fileId}/permanent`);
+  },
+
+  // Получить изображения
+  getImages: async (limit: number = 20): Promise<FileMetadata[]> => {
+    const response = await api.get<FileListResponse>(`/files/images?limit=${limit}`);
+    return response.data.files || [];
   },
 };

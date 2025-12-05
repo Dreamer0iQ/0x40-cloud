@@ -3,6 +3,8 @@ import Login from './pages/login/login';
 import Dashboard from './pages/dashboard/dashboard';
 import Storage from './pages/storage/storage';
 import Favourites from './pages/favourites/favourites';
+import Images from './pages/images/images';
+import Trash from './pages/trash/trash';
 import ProtectedRoute from './components/ProtectedRoute';
 import { authService } from './services/authService';
 
@@ -37,6 +39,18 @@ function App() {
         <Route path="/favourites" element={
           <ProtectedRoute>
             <Favourites />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/images" element={
+          <ProtectedRoute>
+            <Images />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/trash" element={
+          <ProtectedRoute>
+            <Trash />
           </ProtectedRoute>
         } />
 

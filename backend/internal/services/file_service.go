@@ -342,26 +342,73 @@ func (s *FileService) GetFilesByPath(userID uint, virtualPath string) ([]models.
 
 // DeleteFile удаляет файл
 func (s *FileService) DeleteFile(fileID uuid.UUID, userID uint) error {
-	file, err := s.GetFile(fileID, userID)
+	_, err := s.GetFile(fileID, userID)
 	if err != nil {
 		return err
 	}
 
-	// Проверяем, используется ли этот файл другими пользователями
-	count, err := s.fileRepo.CountBySHA256(file.SHA256)
+	// Удаляем запись из БД (soft delete)
+	if err := s.fileRepo.Delete(fileID); err != nil {
+		return fmt.Errorf("failed to delete file metadata: %w", err)
+	}
+
+	return nil
+}
+
+// GetDeletedFiles получает список удаленных файлов пользователя
+func (s *FileService) GetDeletedFiles(userID uint) ([]models.File, error) {
+	files, err := s.fileRepo.FindDeletedByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	// Мы не обогащаем удаленные файлы информацией о starred, так как они удалены
+	return files, nil
+}
+
+// RestoreFile восстанавливает удаленный файл
+func (s *FileService) RestoreFile(fileID uuid.UUID, userID uint) error {
+	// Проверяем, что файл существует (даже если удален) и принадлежит пользователю
+	file, err := s.fileRepo.FindByIDUnscoped(fileID)
+	if err != nil {
+		return fmt.Errorf("file not found: %w", err)
+	}
+
+	if file.UserID != userID {
+		return fmt.Errorf("access denied")
+	}
+
+	if err := s.fileRepo.Restore(fileID); err != nil {
+		return fmt.Errorf("failed to restore file: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteFilePermanently удаляет файл навсегда
+func (s *FileService) DeleteFilePermanently(fileID uuid.UUID, userID uint) error {
+	file, err := s.fileRepo.FindByIDUnscoped(fileID)
+	if err != nil {
+		return fmt.Errorf("file not found: %w", err)
+	}
+
+	if file.UserID != userID {
+		return fmt.Errorf("access denied")
+	}
+
+	// Проверяем, используется ли этот файл другими пользователями (включая удаленных)
+	count, err := s.fileRepo.CountBySHA256Unscoped(file.SHA256)
 	if err != nil {
 		return fmt.Errorf("failed to check file usage: %w", err)
 	}
 
-	// Удаляем запись из БД
-	if err := s.fileRepo.Delete(fileID); err != nil {
-		return fmt.Errorf("failed to delete file metadata: %w", err)
+	// Удаляем запись из БД навсегда
+	if err := s.fileRepo.DeletePermanently(fileID); err != nil {
+		return fmt.Errorf("failed to delete file permanently: %w", err)
 	}
 
 	// Если это был последний пользователь с таким файлом, удаляем физический файл
 	if count <= 1 {
 		if err := os.Remove(file.Path); err != nil && !os.IsNotExist(err) {
-			// Логируем ошибку, но не возвращаем её, т.к. запись в БД уже удалена
 			fmt.Printf("Warning: failed to delete physical file %s: %v\n", file.Path, err)
 		}
 	}
@@ -432,13 +479,13 @@ func (s *FileService) GetStarredFiles(userID uint) ([]models.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Обогащаем файлы информацией о starred
 	// Для starred файлов устанавливаем IsStarred в true
 	for i := range files {
 		files[i].IsStarred = true
 	}
-	
+
 	return files, nil
 }
 
@@ -474,4 +521,13 @@ func (s *FileService) EnrichFilesWithStarred(files []models.File, userID uint) (
 	}
 
 	return files, nil
+}
+
+// GetImages получает последние изображения пользователя
+func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
+	files, err := s.fileRepo.FindImagesByUserID(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return s.EnrichFilesWithStarred(files, userID)
 }

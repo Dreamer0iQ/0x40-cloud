@@ -303,3 +303,87 @@ func (h *FileHandler) GetStarredFiles(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }
+
+func (h *FileHandler) GetDeletedFiles(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	files, err := h.fileService.GetDeletedFiles(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
+}
+
+func (h *FileHandler) RestoreFile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fileIDStr := c.Param("id")
+	fileID, err := uuid.Parse(fileIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file ID"})
+		return
+	}
+
+	if err := h.fileService.RestoreFile(fileID, userID.(uint)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "file restored successfully"})
+}
+
+func (h *FileHandler) DeleteFilePermanently(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fileIDStr := c.Param("id")
+	fileID, err := uuid.Parse(fileIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file ID"})
+		return
+	}
+
+	if err := h.fileService.DeleteFilePermanently(fileID, userID.(uint)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "file deleted permanently"})
+}
+
+func (h *FileHandler) GetImages(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Получаем параметр limit из query, по умолчанию 20
+	limit := 20
+	if limitParam := c.Query("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	files, err := h.fileService.GetImages(userID.(uint), limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
+}

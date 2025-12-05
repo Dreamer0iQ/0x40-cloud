@@ -27,6 +27,15 @@ func (r *FileRepository) FindByID(id uuid.UUID) (*models.File, error) {
 	return &file, nil
 }
 
+func (r *FileRepository) FindByIDUnscoped(id uuid.UUID) (*models.File, error) {
+	var file models.File
+	err := r.db.Unscoped().Preload("User").Where("id = ?", id).First(&file).Error
+	if err != nil {
+		return nil, err
+	}
+	return &file, nil
+}
+
 func (r *FileRepository) FindByUserID(userID uint) ([]models.File, error) {
 	var files []models.File
 	err := r.db.Where("user_id = ?", userID).Order("created_at DESC").Find(&files).Error
@@ -143,4 +152,34 @@ func (r *FileRepository) FindByUserIDAndPath(userID uint, virtualPath string) ([
 	}
 
 	return files, nil
+}
+
+func (r *FileRepository) FindDeletedByUserID(userID uint) ([]models.File, error) {
+	var files []models.File
+	err := r.db.Unscoped().Where("user_id = ? AND deleted_at IS NOT NULL", userID).Order("deleted_at DESC").Find(&files).Error
+	return files, err
+}
+
+func (r *FileRepository) Restore(id uuid.UUID) error {
+	return r.db.Unscoped().Model(&models.File{}).Where("id = ?", id).Update("deleted_at", nil).Error
+}
+
+func (r *FileRepository) DeletePermanently(id uuid.UUID) error {
+	return r.db.Unscoped().Where("id = ?", id).Delete(&models.File{}).Error
+}
+
+func (r *FileRepository) CountBySHA256Unscoped(sha256 string) (int64, error) {
+	var count int64
+	err := r.db.Unscoped().Model(&models.File{}).Where("sha256 = ?", sha256).Count(&count).Error
+	return count, err
+}
+
+func (r *FileRepository) FindImagesByUserID(userID uint, limit int) ([]models.File, error) {
+	var files []models.File
+	// MIME types for images: image/jpeg, image/png, image/gif, etc.
+	err := r.db.Where("user_id = ? AND mime_type LIKE ?", userID, "image/%").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&files).Error
+	return files, err
 }

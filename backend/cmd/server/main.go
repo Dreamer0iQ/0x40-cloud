@@ -81,13 +81,17 @@ func main() {
 			protected.GET("/files/by-path", fileHandler.GetFilesByPath)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)
 			protected.GET("/files/suggested", fileHandler.GetSuggestedFiles)
+			protected.GET("/files/images", fileHandler.GetImages)
 			protected.GET("/files/starred", fileHandler.GetStarredFiles)
+			protected.GET("/files/trash", fileHandler.GetDeletedFiles)
 
 			// Роуты с :id параметром должны быть в конце
 			protected.POST("/files/:id/star", fileHandler.ToggleStarred)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)
 			protected.PATCH("/files/:id/rename", fileHandler.RenameFile)
 			protected.DELETE("/files/:id", fileHandler.DeleteFile)
+			protected.POST("/files/:id/restore", fileHandler.RestoreFile)
+			protected.DELETE("/files/:id/permanent", fileHandler.DeleteFilePermanently)
 		}
 	}
 

@@ -43,12 +43,12 @@ export default function ToolBar({ children }: ToolBarProps) {
                         <path d="M47.5 22.5V44.5C47.5 47.3002 47.5 48.7005 46.955 49.77C46.4757 50.7108 45.7108 51.4757 44.77 51.955C43.7005 52.5 42.3003 52.5 39.5 52.5H20.5C17.6997 52.5 16.2996 52.5 15.2301 51.955C14.2892 51.4757 13.5243 50.7108 13.045 49.77C12.5 48.7005 12.5 47.3002 12.5 44.5V15.5C12.5 12.6997 12.5 11.2996 13.045 10.2301C13.5243 9.28923 14.2892 8.52432 15.2301 8.04497C16.2996 7.5 17.6997 7.5 20.5 7.5H32.5M47.5 22.5L32.5 7.5M47.5 22.5H35C33.6193 22.5 32.5 21.3807 32.5 20V7.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </button>
-
+                {/* 
                 <button className={styles.iconButton}>
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M30 17.5V30H37.5M52.5 30C52.5 42.4265 42.4265 52.5 30 52.5C17.5736 52.5 7.5 42.4265 7.5 30C7.5 17.5736 17.5736 7.5 30 7.5C42.4265 7.5 52.5 17.5736 52.5 30Z" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                </button>
+                </button> */}
 
                 <button
                     className={`${styles.iconButton} ${isActive('/favourites') ? styles.active : ''}`}
@@ -60,7 +60,11 @@ export default function ToolBar({ children }: ToolBarProps) {
                     </svg>
                 </button>
 
-                <button className={styles.iconButton}>
+                <button
+                    className={`${styles.iconButton} ${isActive('/images') ? styles.active : ''}`}
+                    onClick={() => navigate('/images')}
+                    title="Images"
+                >
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M34.1178 40.9375L30.2395 37.4058C28.3378 35.6735 27.3867 34.8075 26.309 34.4795C25.3597 34.1905 24.3461 34.1905 23.3969 34.4795C22.3192 34.8075 21.3682 35.6735 19.4663 37.4058L12.301 43.8938M34.1178 40.9375L34.9075 40.2182C36.8095 38.486 37.7605 37.62 38.838 37.292C39.7873 37.003 40.801 37.003 41.75 37.292C42.8278 37.62 43.7788 38.486 45.6808 40.2182L48.5593 42.724M34.1178 40.9375L42.6172 48.632M42.5 22.5C42.5 25.2615 40.2615 27.5 37.5 27.5C34.7385 27.5 32.5 25.2615 32.5 22.5C32.5 19.7386 34.7385 17.5 37.5 17.5C40.2615 17.5 42.5 19.7386 42.5 22.5ZM52.5 30C52.5 42.4265 42.4265 52.5 30 52.5C17.5736 52.5 7.5 42.4265 7.5 30C7.5 17.5736 17.5736 7.5 30 7.5C42.4265 7.5 52.5 17.5736 52.5 30Z" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -76,7 +80,11 @@ export default function ToolBar({ children }: ToolBarProps) {
                     </svg>
                 </button>
 
-                <button className={styles.iconButton}>
+                <button
+                    className={`${styles.iconButton} ${isActive('/trash') ? styles.active : ''}`}
+                    onClick={() => navigate('/trash')}
+                    title="Trash"
+                >
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 15H50M40 15L39.3235 12.9702C38.6677 11.0031 38.3398 10.0196 37.7318 9.29245C37.1948 8.65032 36.5052 8.1533 35.7262 7.84695C34.844 7.5 33.8075 7.5 31.734 7.5H28.266C26.1925 7.5 25.156 7.5 24.2738 7.84695C23.4948 8.1533 22.8052 8.65032 22.2682 9.29245C21.6601 10.0196 21.3323 11.0031 20.6766 12.9702L20 15M45 15V40.5C45 44.7005 45 46.8005 44.1825 48.405C43.4635 49.8162 42.3162 50.9635 40.905 51.6825C39.3005 52.5 37.2005 52.5 33 52.5H27C22.7996 52.5 20.6994 52.5 19.0951 51.6825C17.6839 50.9635 16.5365 49.8162 15.8175 48.405C15 46.8005 15 44.7005 15 40.5V15M35 25V42.5M25 25V42.5" stroke="black" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
