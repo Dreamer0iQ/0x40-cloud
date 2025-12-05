@@ -229,3 +229,41 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 }
+
+.fileList {
+  padding: 24px;
+  width: 100%;
+  padding-top: 18px;
+}
+
+.loading,
+.error,
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #B0B0B0;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  svg {
+    color: #4A4A4A;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  span {
+    color: #B0B0B0;
+    font-size: 14px;
+  }
+}

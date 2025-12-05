@@ -178,8 +178,18 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
         }
     };
 
-    if (files.length === 0 && !loading) {
-        return null; // Не показываем секцию, если нет недавних файлов
+    if (files.length === 0) {
+        return (
+            <div className={styles.fileList} style={{ width: '80%' }}>
+                <div className={styles.empty}>
+                    <svg width="80" height="80" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M33.75 7.5H30H17.5C14.7386 7.5 12.5 9.73857 12.5 12.5V47.5C12.5 50.2615 14.7386 52.5 17.5 52.5H42.5C45.2615 52.5 47.5 50.2615 47.5 47.5V21.5625M33.75 7.5L47.5 21.5625M33.75 7.5V19.0625C33.75 20.4432 34.8693 21.5625 36.25 21.5625H47.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p>No files uploaded yet</p>
+                    <span>Upload your first file using the buttons on the right</span>
+                </div>
+            </div>
+        );
     }
 
     return (
