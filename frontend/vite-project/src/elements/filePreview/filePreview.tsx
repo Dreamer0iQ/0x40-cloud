@@ -4,6 +4,7 @@ import { fileService } from '../../services/fileService';
 import styles from './filePreview.module.scss';
 import { renderAsync } from 'docx-preview';
 import { read, utils } from 'xlsx';
+import heic2any from 'heic2any';
 
 interface FilePreviewProps {
     file: FileMetadata;
@@ -14,7 +15,7 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
     const [contentUrl, setContentUrl] = useState<string | null>(null);
     const [htmlContent, setHtmlContent] = useState<string | null>(null);
     const [blobContent, setBlobContent] = useState<Blob | null>(null);
-    const [previewType, setPreviewType] = useState<'image' | 'text' | 'docx' | 'excel' | 'none'>('none');
+    const [previewType, setPreviewType] = useState<'image' | 'video' | 'text' | 'docx' | 'excel' | 'none'>('none');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -22,7 +23,16 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
 
     const isImage = (filename: string) => {
         const ext = filename.split('.').pop()?.toLowerCase();
-        return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'heic'].includes(ext || '');
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '');
+    };
+
+    const isHeic = (filename: string) => {
+        return filename.toLowerCase().endsWith('.heic');
+    };
+
+    const isVideo = (filename: string) => {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        return ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext || '');
     };
 
     const isTextOrCode = (filename: string) => {
@@ -57,6 +67,42 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
                     const url = URL.createObjectURL(blob);
                     setContentUrl(url);
                     setPreviewType('image');
+                } else if (isHeic(file.original_name)) {
+                    try {
+                        console.log('Processing HEIC file...');
+                        const blob = await fileService.previewFile(file.id);
+                        console.log('HEIC Blob loaded:', blob.size, blob.type);
+
+                        // heic2any expects a blob with type image/heic or image/heif
+                        const heicBlob = new Blob([blob], { type: 'image/heic' });
+
+                        const convertedBlob = await heic2any({
+                            blob: heicBlob,
+                            toType: "image/jpeg",
+                            quality: 0.8
+                        });
+
+                        console.log('HEIC conversion successful');
+                        const url = URL.createObjectURL(Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob);
+                        setContentUrl(url);
+                        setPreviewType('image');
+                    } catch (heicError: any) {
+                        console.error('HEIC conversion failed:', heicError);
+                        // If conversion fails, we can't preview it.
+                        // We'll throw to the outer catch to show the error state, 
+                        // or we can handle it here to show a specific message.
+                        if (heicError?.code === 2 || heicError?.message?.includes('ERR_LIBHEIF')) {
+                            setError('HEIC preview not supported for this file. Please download to view.');
+                            setLoading(false);
+                            return;
+                        }
+                        throw heicError;
+                    }
+                } else if (isVideo(file.original_name)) {
+                    const blob = await fileService.previewFile(file.id);
+                    const url = URL.createObjectURL(blob);
+                    setContentUrl(url);
+                    setPreviewType('video');
                 } else if (isDocx(file.original_name)) {
                     const blob = await fileService.previewFile(file.id);
                     setBlobContent(blob);
@@ -88,7 +134,7 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
         loadContent();
 
         return () => {
-            if (contentUrl && isImage(file.original_name)) {
+            if (contentUrl && (isImage(file.original_name) || isVideo(file.original_name) || isHeic(file.original_name))) {
                 URL.revokeObjectURL(contentUrl);
             }
         };
@@ -165,6 +211,8 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
                         </div>
                     ) : previewType === 'image' && contentUrl ? (
                         <img src={contentUrl} alt={file.original_name} className={styles.imagePreview} />
+                    ) : previewType === 'video' && contentUrl ? (
+                        <video src={contentUrl} controls className={styles.videoPreview} autoPlay />
                     ) : previewType === 'text' && contentUrl ? (
                         <div className={styles.textPreview}>
                             {contentUrl}
