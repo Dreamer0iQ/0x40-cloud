@@ -3,6 +3,7 @@ import type { FileMetadata } from '../../types/file';
 import { fileService } from '../../services/fileService';
 import styles from './recommendations.module.scss';
 import FileContextMenu from '../fileContextMenu/fileContextMenu';
+import FilePreview from '../filePreview/filePreview';
 
 interface RecommendationsProps {
     title?: string;
@@ -18,6 +19,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
     const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>();
     const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
     const [newFileName, setNewFileName] = useState('');
+    const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
 
     useEffect(() => {
         loadRecentFiles();
@@ -70,6 +72,11 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
         } catch (error) {
             console.error('Failed to download file:', error);
         }
+        handleMenuClose();
+    };
+
+    const handlePreview = (file: FileMetadata) => {
+        setPreviewFile(file);
     };
 
     const handleMenuOpen = (e: React.MouseEvent, fileId: string) => {
@@ -210,7 +217,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                             <div
                                 className={`${styles.fileIconContainer} ${activeMenuFileId === file.id ? styles.menuOpen : ''}`}
                             >
-                                <div onClick={() => handleDownload(file)} style={{ cursor: 'pointer' }}>
+                                <div onClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
                                     {getFileIcon(getFileExtension(file.original_name))}
                                 </div>
                                 <button
@@ -257,11 +264,18 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                                 onClose={handleMenuClose}
                                 onRename={handleRename}
                                 onDelete={handleDelete}
+                                onDownload={() => handleDownload(file)}
                                 position={menuPosition}
                             />
                         </div>
                     ))}
                 </div>
+            )}
+            {previewFile && (
+                <FilePreview
+                    file={previewFile}
+                    onClose={() => setPreviewFile(null)}
+                />
             )}
         </div>
     );

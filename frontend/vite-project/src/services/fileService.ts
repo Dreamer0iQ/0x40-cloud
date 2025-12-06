@@ -130,6 +130,14 @@ export const fileService = {
     window.URL.revokeObjectURL(url);
   },
 
+  // Получить файл для предпросмотра (Blob)
+  previewFile: async (fileId: string): Promise<Blob> => {
+    const response = await api.get(`/files/${fileId}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   // Удалить файл
   deleteFile: async (fileId: string): Promise<void> => {
     await api.delete(`/files/${fileId}`);

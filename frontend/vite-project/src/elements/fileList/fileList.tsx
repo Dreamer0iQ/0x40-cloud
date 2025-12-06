@@ -4,6 +4,7 @@ import type { FileMetadata } from '../../types/file';
 import { fileService } from '../../services/fileService';
 import { normalizePath } from '../../utils/pathUtils';
 import styles from './fileList.module.scss';
+import FilePreview from '../filePreview/filePreview';
 
 interface FileListProps {
   refreshTrigger?: number;
@@ -18,6 +19,7 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   const [error, setError] = useState<string | null>(null);
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState('');
+  const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
   const navigate = useNavigate();
 
   const loadFiles = async () => {
@@ -157,6 +159,10 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
     navigate(`/storage?path=${encodeURIComponent(newPath)}`);
   };
 
+  const handlePreview = (file: FileMetadata) => {
+    setPreviewFile(file);
+  };
+
   if (loading) {
     return (
       <div className={styles.fileList}>
@@ -215,7 +221,11 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
         {/* Файлы */}
         {files.map((file) => (
           <div key={file.id} className={styles.fileRow}>
-            <div className={styles.fileInfo}>
+            <div
+              className={styles.fileInfo}
+              onClick={() => handlePreview(file)}
+              style={{ cursor: 'pointer' }}
+            >
               <div className={styles.fileIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9M13 2L20 9M13 2V9H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -223,7 +233,7 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
               </div>
               <div className={styles.fileName}>
                 {renamingFileId === file.id ? (
-                  <div className={styles.renameInput}>
+                  <div className={styles.renameInput} onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       value={newFileName}
@@ -305,6 +315,14 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
           </div>
         ))}
       </div>
-    </div>
+      {
+        previewFile && (
+          <FilePreview
+            file={previewFile}
+            onClose={() => setPreviewFile(null)}
+          />
+        )
+      }
+    </div >
   );
 }
