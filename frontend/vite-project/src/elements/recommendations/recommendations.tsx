@@ -76,6 +76,13 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
     };
 
     const handlePreview = (file: FileMetadata) => {
+        // 50 MB limit
+        if (file.size > 50 * 1024 * 1024) {
+            if (confirm(`File is too large for preview (${fileService.formatFileSize(file.size)}). Download instead?`)) {
+                handleDownload(file);
+            }
+            return;
+        }
         setPreviewFile(file);
     };
 
