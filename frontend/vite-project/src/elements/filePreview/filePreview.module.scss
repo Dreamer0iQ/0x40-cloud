@@ -11,6 +11,10 @@
     align-items: center;
     justify-content: center;
     animation: fadeIn 0.2s ease-out;
+
+    &.exiting {
+        animation: fadeOut 0.2s ease-in forwards;
+    }
 }
 
 .modal {
@@ -22,6 +26,10 @@
     align-items: center;
     animation: scaleIn 0.2s ease-out;
     outline: none;
+
+    &.exiting {
+        animation: scaleOut 0.2s ease-in forwards;
+    }
 }
 
 .content {
@@ -33,7 +41,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 300px;
+    width: 100%;
     min-height: 200px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -136,7 +144,8 @@
     color: #fff;
     font-weight: 500;
     font-size: 0.95rem;
-        border-radius: 12px 12px 0px 0px;
+    min-width: 400px;
+    border-radius: 12px 12px 0px 0px;
 
     .title {
         white-space: nowrap;
@@ -193,5 +202,27 @@
     to {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes scaleOut {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.95);
+        opacity: 0;
     }
 }

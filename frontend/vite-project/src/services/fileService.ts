@@ -1,5 +1,6 @@
 import api from '../api/axios';
 import type { FileUploadResponse, FileListResponse, FileMetadata } from '../types/file';
+import { get, set, clear } from 'idb-keyval';
 
 export const fileService = {
   // Загрузить файл
@@ -132,10 +133,30 @@ export const fileService = {
 
   // Получить файл для предпросмотра (Blob)
   previewFile: async (fileId: string): Promise<Blob> => {
+    try {
+      const cachedBlob = await get(fileId);
+      if (cachedBlob) {
+        return cachedBlob;
+      }
+    } catch (err) {
+      console.warn('Failed to read from cache:', err);
+    }
+
     const response = await api.get(`/files/${fileId}/download?preview=true`, {
       responseType: 'blob',
     });
-    return response.data;
+
+    const blob = response.data;
+
+    // Save to cache asynchronously
+    set(fileId, blob).catch(err => console.warn('Failed to save to cache:', err));
+
+    return blob;
+  },
+
+  // Очистить кэш предпросмотра
+  clearPreviewCache: async () => {
+    await clear();
   },
 
   // Удалить файл
