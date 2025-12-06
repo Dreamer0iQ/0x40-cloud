@@ -12,6 +12,62 @@ interface RecommendationsProps {
     type?: 'recent' | 'suggested' | 'images'; // Тип: недавние, рекомендованные или изображения
 }
 
+interface FileThumbnailProps {
+    file: FileMetadata;
+    getFileIcon: (extension: string) => React.ReactNode;
+}
+
+const FileThumbnail = ({ file, getFileIcon }: FileThumbnailProps) => {
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    const isImage = (filename: string) => {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '');
+    };
+
+    useEffect(() => {
+        let active = true;
+        const loadThumbnail = async () => {
+            if (isImage(file.original_name)) {
+                try {
+                    // Skip large files for thumbnails to save bandwidth/memory
+                    if (file.size > 10 * 1024 * 1024) return;
+
+                    const blob = await fileService.previewFile(file.id);
+                    if (active) {
+                        const url = URL.createObjectURL(blob);
+                        setImageUrl(url);
+                    }
+                } catch (err) {
+                    console.error('Failed to load thumbnail:', err);
+                }
+            }
+        };
+
+        loadThumbnail();
+
+        return () => {
+            active = false;
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
+        };
+    }, [file.id, file.original_name, file.size]);
+
+    if (imageUrl) {
+        return (
+            <div className={styles.iconWrapper} style={{ padding: 0, overflow: 'hidden' }}>
+                <img src={imageUrl} alt={file.original_name} className={styles.thumbnailImage} />
+            </div>
+        );
+    }
+
+    const getFileExtension = (filename: string): string => {
+        const ext = filename.split('.').pop();
+        return ext ? ext.toUpperCase() : 'FILE';
+    };
+
+    return getFileIcon(getFileExtension(file.original_name));
+};
+
 export default function Recommendations({ title = "Recent files", refreshTrigger, limit = 5, type = 'recent' }: RecommendationsProps) {
     const [files, setFiles] = useState<FileMetadata[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,10 +101,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
         }
     };
 
-    const getFileExtension = (filename: string): string => {
-        const ext = filename.split('.').pop();
-        return ext ? ext.toUpperCase() : 'FILE';
-    };
+
 
     const getTimeAgo = (dateString: string): string => {
         const date = new Date(dateString);
@@ -225,7 +278,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                                 className={`${styles.fileIconContainer} ${activeMenuFileId === file.id ? styles.menuOpen : ''}`}
                             >
                                 <div onClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
-                                    {getFileIcon(getFileExtension(file.original_name))}
+                                    <FileThumbnail file={file} getFileIcon={getFileIcon} />
                                 </div>
                                 <button
                                     className={styles.moreButton}
