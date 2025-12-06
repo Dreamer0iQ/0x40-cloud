@@ -132,7 +132,7 @@ export const fileService = {
 
   // Получить файл для предпросмотра (Blob)
   previewFile: async (fileId: string): Promise<Blob> => {
-    const response = await api.get(`/files/${fileId}/download`, {
+    const response = await api.get(`/files/${fileId}/download?preview=true`, {
       responseType: 'blob',
     });
     return response.data;

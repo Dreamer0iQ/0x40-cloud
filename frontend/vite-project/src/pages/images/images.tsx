@@ -104,8 +104,7 @@ export default function Images() {
             )}
             <ToolBar>
                 <SearchBar />
-                <h1 style={{ marginTop: "65px", padding: "25px", fontSize: "1.5rem", paddingLeft: "30px", color: "white" }}>Images</h1>
-                <div className={styles.container} style={{ "marginTop": "60px", width: "80%" }}>
+                <div className={styles.container} style={{ "marginTop": "60px"}}>
                     <Recommendations
                         title="Images"
                         type="images"

@@ -126,16 +126,19 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 	}
 
 	// Записываем активность в Redis (не блокируем, если не получилось)
-	go func() {
-		if h.activityService != nil {
-			ctx := context.Background()
-			if err := h.activityService.RecordActivity(ctx, userID.(uint), fileID, services.ActivityDownload); err != nil {
-				log.Printf("⚠️ Failed to record download activity: %v", err)
-			} else {
-				log.Printf("✓ Recorded download activity for user %d, file %s", userID.(uint), fileID)
+	// Только если это не предпросмотр
+	if c.Query("preview") != "true" {
+		go func() {
+			if h.activityService != nil {
+				ctx := context.Background()
+				if err := h.activityService.RecordActivity(ctx, userID.(uint), fileID, services.ActivityDownload); err != nil {
+					log.Printf("⚠️ Failed to record download activity: %v", err)
+				} else {
+					log.Printf("✓ Recorded download activity for user %d, file %s", userID.(uint), fileID)
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	// Устанавливаем заголовки для скачивания
 	c.Header("Content-Description", "File Transfer")
