@@ -246,6 +246,9 @@
 .loading,
 .error,
 .empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   padding: 60px 20px;
   color: #B0B0B0;

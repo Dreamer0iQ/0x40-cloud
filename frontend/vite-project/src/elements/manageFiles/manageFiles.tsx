@@ -2,6 +2,7 @@ import { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import styles from './manageFiles.module.scss';
 import { fileService } from '../../services/fileService';
 import FolderNameModal from '../folderNameModal/folderNameModal';
+import DataPulseLoader from '../Logo/DataPulseLoader';
 
 interface ManageFilesProps {
     onFileUploaded?: () => void;
@@ -150,6 +151,9 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
             {/* Прогресс загрузки */}
             {isUploading && (
                 <div className={styles.uploadProgress}>
+                    <div className={styles.loaderContainer}>
+                        <DataPulseLoader width={40} height={40} />
+                    </div>
                     <div className={styles.progressBar}>
                         <div
                             className={styles.progressFill}

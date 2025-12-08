@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { authService } from '../../services/authService';
 import styles from './login.module.scss';
+import DataPulseLoader from '../../elements/Logo/DataPulseLoader';
 
 interface LoginProps {
     onAuthSuccess: () => void;
@@ -190,10 +191,18 @@ export default function Login({ onAuthSuccess }: LoginProps) {
                         )}
 
                         <button type="submit" className={styles.loginButton} disabled={loading}>
-                            {loading ? 'Loading...' : (isRegister ? 'Sign up' : 'Login')}
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            {loading ? (
+                                <span className={styles.loadingContainer}>
+                                    <DataPulseLoader width={24} height={24} />
+                                </span>
+                            ) : (
+                                <>
+                                    {isRegister ? 'Sign up' : 'Login'}
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </>
+                            )}
                         </button>
                     </form>
 

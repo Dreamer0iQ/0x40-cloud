@@ -9,6 +9,7 @@ import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
 import Breadcrumbs from '../../elements/breadcrumbs/breadcrumbs';
 import FileList from '../../elements/fileList/fileList';
+import FullPageLoader from '../../elements/FullPageLoader/FullPageLoader';
 
 interface StorageProps {
     onLogout: () => void;
@@ -103,7 +104,7 @@ export default function Storage({ onLogout }: StorageProps) {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.loading}>Loading...</div>
+                <FullPageLoader />
             </div>
         );
     }

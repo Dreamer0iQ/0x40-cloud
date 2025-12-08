@@ -6,6 +6,7 @@ import ToolBar from '../../elements/toolBar/toolbar';
 import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
 import Recommendations from '../../elements/recommendations/recommendations';
+import FullPageLoader from '../../elements/FullPageLoader/FullPageLoader';
 
 interface DashboardProps {
     onLogout: () => void;
@@ -86,7 +87,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.loading}>Loading...</div>
+                <FullPageLoader />
             </div>
         );
     }

@@ -4,6 +4,8 @@ import { fileService } from '../../services/fileService';
 import styles from './recommendations.module.scss';
 import FileContextMenu from '../fileContextMenu/fileContextMenu';
 import FilePreview from '../filePreview/filePreview';
+import LogoMonochrome from '../Logo/LogoMonochrome';
+import DataPulseLoader from '../Logo/DataPulseLoader';
 
 interface RecommendationsProps {
     title?: string;
@@ -266,7 +268,9 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
             </div>
 
             {loading ? (
-                <div className={styles.loading}>Loading...</div>
+                <div className={styles.loading}>
+                    <DataPulseLoader width={60} height={60} />
+                </div>
             ) : (
                 <div className={styles.filesList}>
                     {files.map((file) => (
@@ -294,9 +298,7 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                             </div>
                             <div className={styles.fileInfo}>
                                 <div className={styles.iconSmall}>
-                                    <svg width="16" height="16" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M60 10L90 30L80 60L60 80L40 60L30 30L60 10Z" stroke="#3B82F6" strokeWidth="3" fill="none" />
-                                    </svg>
+                                    <LogoMonochrome width={16} height={16} color="#808080" />
                                 </div>
                                 <div className={styles.fileDetails}>
                                     {renamingFileId === file.id ? (

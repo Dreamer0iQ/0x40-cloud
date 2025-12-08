@@ -5,6 +5,7 @@ import ToolBar from '../../elements/toolBar/toolbar';
 import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
 import FileList from '../../elements/fileList/fileList';
+import FullPageLoader from '../../elements/FullPageLoader/FullPageLoader';
 
 export default function Trash() {
     const [loading, setLoading] = useState(true);
@@ -75,7 +76,7 @@ export default function Trash() {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.loading}>Loading...</div>
+                <FullPageLoader />
             </div>
         );
     }

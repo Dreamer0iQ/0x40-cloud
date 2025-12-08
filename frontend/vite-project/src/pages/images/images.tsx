@@ -5,6 +5,7 @@ import ToolBar from '../../elements/toolBar/toolbar';
 import SearchBar from '../../elements/searchBar/searchbar';
 import ManageFiles from '../../elements/manageFiles/manageFiles';
 import Recommendations from '../../elements/recommendations/recommendations';
+import FullPageLoader from '../../elements/FullPageLoader/FullPageLoader';
 
 export default function Images() {
     const [loading, setLoading] = useState(true);
@@ -77,7 +78,7 @@ export default function Images() {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.loading}>Loading...</div>
+                <FullPageLoader />
             </div>
         );
     }

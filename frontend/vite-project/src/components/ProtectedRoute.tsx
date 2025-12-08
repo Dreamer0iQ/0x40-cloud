@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import DataPulseLoader from '../elements/Logo/DataPulseLoader';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -41,11 +42,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
                 justifyContent: 'center', 
                 alignItems: 'center', 
                 height: '100vh',
-                background: '#1E1E1E',
-                color: '#0060FF',
-                fontSize: '1.5rem'
+                background: '#1E1E1E'
             }}>
-                Loading...
+                <DataPulseLoader width={80} height={80} />
             </div>
         );
     }

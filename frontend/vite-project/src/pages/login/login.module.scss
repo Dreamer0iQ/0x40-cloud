@@ -355,6 +355,12 @@
     padding: 0.875rem;
     font-size: 0.9375rem;
   }
+  
+  .loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 // Разделитель

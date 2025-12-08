@@ -1,6 +1,7 @@
 import styles from './toolbar.module.scss'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import Logo from '../Logo/Logo'
 
 interface ToolBarProps {
     children?: ReactNode
@@ -18,10 +19,7 @@ export default function ToolBar({ children }: ToolBarProps) {
         <>
             <div className={styles.toolbar}>
                 <div className={styles.logo}>
-                    <svg width="50" height="50" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M60 10L90 30L80 60L60 80L40 60L30 30L60 10Z" stroke="#3B82F6" strokeWidth="3" fill="none" />
-                        <path d="M60 40L75 50L70 65L60 75L50 65L45 50L60 40Z" stroke="#60A5FA" strokeWidth="2" fill="none" />
-                    </svg>
+                    <Logo width={50} height={50} />
                 </div>
 
                 <button

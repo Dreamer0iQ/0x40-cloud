@@ -6,6 +6,7 @@ import { normalizePath } from '../../utils/pathUtils';
 import styles from './fileList.module.scss';
 import FilePreview from '../filePreview/filePreview';
 import { useToast } from '../../contexts/toastContext';
+import DataPulseLoader from '../Logo/DataPulseLoader';
 
 interface FileListProps {
   refreshTrigger?: number;
@@ -261,7 +262,9 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   if (loading) {
     return (
       <div className={styles.fileList}>
-        <div className={styles.loading}>Loading files...</div>
+        <div className={styles.loading}>
+          <DataPulseLoader width={60} height={60} />
+        </div>
       </div>
     );
   }
