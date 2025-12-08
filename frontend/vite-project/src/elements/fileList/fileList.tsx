@@ -14,7 +14,7 @@ interface FileListProps {
 
 export default function FileList({ refreshTrigger, currentPath = '/', mode = 'storage' }: FileListProps) {
   const [files, setFiles] = useState<FileMetadata[]>([]);
-  const [folders, setFolders] = useState<string[]>([]);
+  const [folders, setFolders] = useState<FileMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
@@ -39,18 +39,21 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
       }
 
       // Разделяем на файлы и папки
-      const uniqueFolders = new Set<string>();
+      const uniqueFoldersMap = new Map<string, FileMetadata>();
       const filesOnly: FileMetadata[] = [];
 
       pathFiles.forEach(file => {
         if (file.mime_type === 'inode/directory') {
-          uniqueFolders.add(file.original_name);
+          // Use original_name as key to dedup if needed, though they should be unique by ID
+          if (!uniqueFoldersMap.has(file.original_name)) {
+            uniqueFoldersMap.set(file.original_name, file);
+          }
         } else {
           filesOnly.push(file);
         }
       });
 
-      setFolders(Array.from(uniqueFolders).sort());
+      setFolders(Array.from(uniqueFoldersMap.values()).sort((a, b) => a.original_name.localeCompare(b.original_name)));
       setFiles(filesOnly);
     } catch (err) {
       console.error('Failed to load files:', err);
@@ -136,13 +139,31 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
     event.stopPropagation();
 
     try {
-      const result = await fileService.toggleStarred(file.id);
-      // Обновляем локальное состояние
-      setFiles(prevFiles =>
-        prevFiles.map(f =>
-          f.id === file.id ? { ...f, is_starred: result.is_starred } : f
-        )
-      );
+      let isStarred = false;
+      if (file.mime_type === 'inode/directory') {
+        const folderPath = normalizePath(
+          currentPath === '/'
+            ? `/${file.original_name}/`
+            : `${currentPath}${file.original_name}/`
+        );
+        const result = await fileService.toggleStarredFolder(folderPath);
+        isStarred = result.is_starred;
+
+        setFolders(prev =>
+          prev.map(f =>
+            f.original_name === file.original_name ? { ...f, is_starred: isStarred } : f
+          )
+        );
+
+      } else {
+        const result = await fileService.toggleStarred(file.id);
+        isStarred = result.is_starred;
+        setFiles(prevFiles =>
+          prevFiles.map(f =>
+            f.id === file.id ? { ...f, is_starred: isStarred } : f
+          )
+        );
+      }
     } catch (err) {
       console.error('Failed to toggle starred:', err);
       alert('Failed to update starred status');
@@ -159,6 +180,7 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
     navigate(`/storage?path=${encodeURIComponent(newPath)}`);
   };
 
+
   const handlePreview = (file: FileMetadata) => {
     // 50 MB limit
     if (file.size > 50 * 1024 * 1024) {
@@ -168,6 +190,20 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
       return;
     }
     setPreviewFile(file);
+  };
+
+  const handleDownloadFolder = async (folder: FileMetadata) => {
+    try {
+      const folderPath = normalizePath(
+        currentPath === '/'
+          ? `/${folder.original_name}/`
+          : `${currentPath}${folder.original_name}/`
+      );
+      await fileService.downloadFolder(folderPath, folder.original_name);
+    } catch (err) {
+      console.error('Failed to download folder:', err);
+      alert('Failed to download folder');
+    }
   };
 
   if (loading) {
@@ -204,23 +240,83 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
     <div className={styles.fileList}>
       <div className={styles.table}>
         {/* Папки */}
-        {folders.map((folderName) => (
+
+        {/* Файлы и Папки */}
+
+        {folders.map((folder) => (
           <div
-            key={folderName}
+            key={folder.original_name}
             className={styles.fileRow}
-            onClick={() => handleFolderClick(folderName)}
-            style={{ cursor: 'pointer' }}
           >
-            <div className={styles.fileInfo}>
-              <div className={styles.fileIcon}>
+            <div
+              className={styles.fileInfo}
+              onClick={() => handleFolderClick(folder.original_name)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className={`${styles.fileIcon} ${styles.folderIcon}`}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3 7C3 5.89543 3.89543 5 5 5H9L11 7H19C20.1046 7 21 7.89543 21 9V17C21 18.1046 20.1046 19 19 19H5C3.89543 19 3 18.1046 3 17V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className={styles.fileName}>
-                <span className={styles.name}>{folderName}</span>
-                <span className={styles.meta}>Folder</span>
+                {renamingFileId === folder.original_name ? ( // Virtual folder has no ID, using name for state tracking if needed, or stick to ID if we assigned one in loadFiles?
+                  // Wait, loadFiles assigns metadata. If backend sends empty ID, we have problem.
+                  // Let's rely on name for now since ID is 0000.
+                  <div className={styles.renameInput} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      value={newFileName}
+                      onChange={(e) => setNewFileName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenameSubmit(folder); // This needs to handle folder rename by path
+                        if (e.key === 'Escape') handleRenameCancel();
+                      }}
+                      autoFocus
+                    />
+                    <button onClick={() => handleRenameSubmit(folder)} className={styles.saveBtn}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L22 12L12 22L2 12L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    <button onClick={handleRenameCancel} className={styles.cancelBtn}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className={styles.name}>{folder.original_name}</span>
+                    <span className={styles.meta}>Folder</span>
+                  </>
+                )}
               </div>
+            </div>
+            <div className={styles.fileActions}>
+              <button onClick={() => handleDownloadFolder(folder)} title="Download Zip">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button onClick={() => handleDelete(folder)} title="Delete">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button onClick={() => handleRename(folder)} title="Rename">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.1022 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.1022 21.5 2.5C21.8978 2.8978 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.1022 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => handleToggleStarred(folder, e)}
+                title={folder.is_starred ? "Remove from favorites" : "Add to favorites"}
+                className={folder.is_starred ? styles.starred : ''}
+              >
+                <svg width="20" height="20" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M30 7.5L35.0892 20.4038C35.559 21.595 35.7938 22.1905 36.1535 22.6927C36.4723 23.1379 36.862 23.5277 37.3073 23.8465C37.8095 24.2061 38.405 24.441 39.5963 24.9108L52.5 30L39.5963 35.0892C38.405 35.559 37.8095 35.7938 37.3073 36.1535C36.862 36.4723 36.4723 36.862 36.1535 37.3073C35.7938 37.8095 35.559 38.405 35.0892 39.5963L30 52.5L24.9108 39.5963C24.441 38.405 24.2061 37.8095 23.8465 37.3073C23.5277 36.862 23.1379 36.4723 22.6927 36.1535C22.1905 35.7938 21.595 35.559 20.4038 35.0892L7.5 30L20.4038 24.9108C21.595 24.441 22.1905 24.2061 22.6927 23.8465C23.1379 23.5277 23.5277 23.1379 23.8465 22.6927C24.2061 22.1905 24.441 21.595 24.9108 20.4038L30 7.5Z" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           </div>
         ))}

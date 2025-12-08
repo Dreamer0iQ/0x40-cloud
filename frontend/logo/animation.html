@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x40 Cloud Loaders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Animation 1: Server Pulse (Data Activity) --- */
+        @keyframes serverPulse {
+
+            0%,
+            100% {
+                fill-opacity: 1;
+                filter: brightness(1);
+            }
+
+            50% {
+                fill-opacity: 0.5;
+                filter: brightness(1.3);
+            }
+        }
+
+        .anim-pulse-1 {
+            animation: serverPulse 1.5s infinite 0s;
+        }
+
+        .anim-pulse-2 {
+            animation: serverPulse 1.5s infinite 0.2s;
+        }
+
+        .anim-pulse-3 {
+            animation: serverPulse 1.5s infinite 0.4s;
+        }
+
+        .anim-pulse-4 {
+            animation: serverPulse 1.5s infinite 0.6s;
+        }
+
+        /* --- Animation 2: Cloud Float (Levitation) --- */
+        @keyframes floatY {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .anim-float-group {
+            animation: floatY 3s ease-in-out infinite;
+        }
+
+        /* Separate piece floating slightly differently */
+        @keyframes floatPiece {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(45deg);
+            }
+
+            50% {
+                transform: translate(0, -12px) rotate(45deg);
+            }
+        }
+
+        .anim-float-bit {
+            animation: floatPiece 3s ease-in-out infinite;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+
+
+        /* --- Animation 3: Bounce (Loading) --- */
+        @keyframes bounceBlock {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            25% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .anim-bounce-1 {
+            animation: bounceBlock 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 0s;
+        }
+
+        .anim-bounce-2 {
+            animation: bounceBlock 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 0.1s;
+        }
+
+        .anim-bounce-3 {
+            animation: bounceBlock 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 0.2s;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen p-8 text-slate-800 flex flex-col items-center">
+
+    <div class="max-w-4xl w-full space-y-12">
+
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl font-bold text-slate-900">Варианты Preloader'ов</h1>
+            <p class="text-slate-500">CSS-анимации на основе SVG логотипа</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <!-- Loader 1: Data Pulse -->
+            <div class="bg-white rounded-xl p-8 flex flex-col items-center gap-6 shadow-sm border border-slate-200">
+                <div class="h-32 flex items-center justify-center">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Splitting the logo into logical groups for sequencing -->
+                        <path class="anim-pulse-1" d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#3B82F6" />
+                        <path class="anim-pulse-2" d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#60A5FA" />
+                        <path class="anim-pulse-3" d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#2563EB" />
+                        <g class="anim-pulse-4">
+                            <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#1D4ED8" />
+                            <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1E40AF" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h3 class="font-semibold text-slate-900">Data Pulse</h3>
+                    <p class="text-xs text-slate-500 mt-1">Имитация активности. Хорошо подходит для моментов
+                        "Processing..." или "Syncing".</p>
+                </div>
+            </div>
+
+            <!-- Loader 2: Cloud Float -->
+            <div class="bg-slate-900 rounded-xl p-8 flex flex-col items-center gap-6 shadow-sm border border-slate-800">
+                <div class="h-32 flex items-center justify-center">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        class="anim-float-group">
+                        <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#60A5FA" />
+                        <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#93C5FD" />
+                        <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#3B82F6" />
+                        <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#2563EB" />
+                        <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1D4ED8" />
+                        <!-- Floating bit separately -->
+                        <rect x="42" y="0" width="16" height="16" transform="rotate(45 50 13)" fill="#FFFFFF"
+                            class="anim-float-bit opacity-90" />
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h3 class="font-semibold text-white">Cloud Levitation</h3>
+                    <p class="text-xs text-slate-400 mt-1">Плавное парение. Спокойный режим ожидания загрузки страницы.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Loader 3: Block Bounce -->
+            <div class="bg-white rounded-xl p-8 flex flex-col items-center gap-6 shadow-sm border border-slate-200">
+                <div class="h-32 flex items-center justify-center">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Left Wing -->
+                        <g class="anim-bounce-1">
+                            <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#3B82F6" />
+                            <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#60A5FA" />
+                        </g>
+
+                        <!-- Right Wing -->
+                        <g class="anim-bounce-2">
+                            <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#2563EB" />
+                        </g>
+
+                        <!-- Base -->
+                        <g class="anim-bounce-3">
+                            <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#1D4ED8" />
+                            <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1E40AF" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h3 class="font-semibold text-slate-900">Block Bounce</h3>
+                    <p class="text-xs text-slate-500 mt-1">Динамичная "волна". Классический индикатор загрузки.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Full Screen Overlay Example -->
+        <div class="relative bg-blue-50 border border-blue-100 rounded-2xl p-12 overflow-hidden text-center space-y-4">
+            <h2 class="text-lg font-bold text-blue-900 mb-8">Пример на весь экран</h2>
+
+            <!-- Centered Loader -->
+            <div class="flex justify-center">
+                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path class="anim-pulse-1" d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#3B82F6" />
+                    <path class="anim-pulse-2" d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#60A5FA" />
+                    <path class="anim-pulse-3" d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#2563EB" />
+                    <path class="anim-pulse-4" d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#1D4ED8" />
+                    <path class="anim-pulse-4" d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1E40AF" />
+                </svg>
+            </div>
+
+            <p class="text-blue-600 font-mono text-sm animate-pulse">Загрузка облака...</p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

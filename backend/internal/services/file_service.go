@@ -1,6 +1,7 @@
 package services
 
 import (
+	"archive/zip"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -11,6 +12,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
@@ -18,13 +20,14 @@ import (
 )
 
 type FileService struct {
-	fileRepo      *repositories.FileRepository
-	starredRepo   *repositories.StarredFileRepository
-	storageDir    string
-	encryptionKey []byte // 32 bytes для AES-256
+	fileRepo          *repositories.FileRepository
+	starredRepo       *repositories.StarredFileRepository
+	starredFolderRepo *repositories.StarredFolderRepository
+	storageDir        string
+	encryptionKey     []byte // 32 bytes для AES-256
 }
 
-func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, storageDir string, encryptionKey string) (*FileService, error) {
+func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, starredFolderRepo *repositories.StarredFolderRepository, storageDir string, encryptionKey string) (*FileService, error) {
 	// Убеждаемся, что ключ имеет правильную длину (32 байта для AES-256)
 	key := []byte(encryptionKey)
 	if len(key) != 32 {
@@ -37,10 +40,11 @@ func NewFileService(fileRepo *repositories.FileRepository, starredRepo *reposito
 	}
 
 	return &FileService{
-		fileRepo:      fileRepo,
-		starredRepo:   starredRepo,
-		storageDir:    storageDir,
-		encryptionKey: key,
+		fileRepo:          fileRepo,
+		starredRepo:       starredRepo,
+		starredFolderRepo: starredFolderRepo,
+		storageDir:        storageDir,
+		encryptionKey:     key,
 	}, nil
 }
 
@@ -473,17 +477,54 @@ func (s *FileService) ToggleStarred(fileID uuid.UUID, userID uint) (bool, error)
 	}
 }
 
-// GetStarredFiles получает все избранные файлы пользователя
+// GetStarredFiles получает все избранные файлы и папки пользователя
 func (s *FileService) GetStarredFiles(userID uint) ([]models.File, error) {
+	// 1. Get starred files
 	files, err := s.starredRepo.FindStarredFilesByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Обогащаем файлы информацией о starred
-	// Для starred файлов устанавливаем IsStarred в true
 	for i := range files {
 		files[i].IsStarred = true
+	}
+
+	// 2. Get starred folders
+	starredFolders, err := s.starredFolderRepo.FindStarredFoldersByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Convert folders to File models and append
+	for _, sf := range starredFolders {
+		// Parse path to get name and parent path
+		// Path format: /foo/bar/
+		path := sf.FolderPath
+		
+		// Ensure cleaning logic matches what we expect
+		if path == "/" {
+			continue // Root cannot be starred usually, or handle as needed
+		}
+		
+		// Remove trailing slash for splitting
+		cleanPath := path
+		if len(cleanPath) > 1 && cleanPath[len(cleanPath)-1] == '/' {
+			cleanPath = cleanPath[:len(cleanPath)-1]
+		}
+		
+		dir, file := filepath.Split(cleanPath)
+		// dir will be "/foo/" and file will be "bar"
+		
+		folderFile := models.File{
+			OriginalName: file,
+			VirtualPath:  dir,
+			FolderName:   file, // Or maybe keep empty? usually folder_name is redundant here
+			MimeType:     "inode/directory",
+			IsStarred:    true,
+            // ID is empty/zero for folders usually, or generates on fly. 
+            // Ideally frontend uses name/path key.
+		}
+		files = append(files, folderFile)
 	}
 
 	return files, nil
@@ -495,33 +536,93 @@ func (s *FileService) EnrichFilesWithStarred(files []models.File, userID uint) (
 		return files, nil
 	}
 
-	// Собираем ID файлов
-	fileIDs := make([]uuid.UUID, 0, len(files))
-	for _, file := range files {
-		// Пропускаем виртуальные папки
+	// Собираем ID файлов и Пути папок
+	fileIDs := make([]uuid.UUID, 0)
+	folderPaths := make([]string, 0)
+    
+    // Map to quickly find folder index by path
+    folderIndexMap := make(map[string][]int)
+
+	for i, file := range files {
 		if file.MimeType == "inode/directory" {
-			continue
+            // Construct full path for folder
+            // VirtualPath is parent path, e.g. "/". OriginalName is "foo". Full: "/foo/"
+            // Or "/bar/". OriginalName "baz". Full: "/bar/baz/"
+            fullPath := file.VirtualPath
+            if fullPath != "/" && len(fullPath) > 0 && fullPath[len(fullPath)-1] != '/' {
+                fullPath += "/"
+            }
+            if file.VirtualPath == "/" {
+                fullPath = "/" + file.OriginalName + "/"
+            } else {
+                 fullPath = fullPath + file.OriginalName + "/"
+            }
+            
+            folderPaths = append(folderPaths, fullPath)
+            folderIndexMap[fullPath] = append(folderIndexMap[fullPath], i)
+		} else {
+			fileIDs = append(fileIDs, file.ID)
 		}
-		fileIDs = append(fileIDs, file.ID)
 	}
 
-	if len(fileIDs) == 0 {
-		return files, nil
+    // Enrich Files
+	if len(fileIDs) > 0 {
+		starredMap, err := s.starredRepo.GetStarredMap(userID, fileIDs)
+		if err != nil {
+			return files, fmt.Errorf("failed to get starred files map: %w", err)
+		}
+		for i := range files {
+			if files[i].MimeType != "inode/directory" {
+				files[i].IsStarred = starredMap[files[i].ID]
+			}
+		}
 	}
 
-	// Получаем карту starred файлов
-	starredMap, err := s.starredRepo.GetStarredMap(userID, fileIDs)
-	if err != nil {
-		return files, fmt.Errorf("failed to get starred map: %w", err)
-	}
-
-	// Обогащаем файлы информацией о starred
-	for i := range files {
-		files[i].IsStarred = starredMap[files[i].ID]
-	}
+    // Enrich Folders
+    if len(folderPaths) > 0 {
+        starredFolderMap, err := s.starredFolderRepo.GetStarredMap(userID, folderPaths)
+        if err != nil {
+             return files, fmt.Errorf("failed to get starred folders map: %w", err)
+        }
+        for path, isStarred := range starredFolderMap {
+            if indices, ok := folderIndexMap[path]; ok {
+                for _, idx := range indices {
+                    files[idx].IsStarred = isStarred
+                }
+            }
+        }
+    }
 
 	return files, nil
 }
+
+// ToggleStarredFolder переключает статус избранного для папки
+func (s *FileService) ToggleStarredFolder(virtualPath string, userID uint) (bool, error) {
+    // virtualPath must be full path to folder, e.g. /my-folder/
+    
+    // Check if starred
+    isStarred, err := s.starredFolderRepo.IsStarred(userID, virtualPath)
+    if err != nil {
+        return false, err
+    }
+
+    if isStarred {
+        if err := s.starredFolderRepo.Delete(userID, virtualPath); err != nil {
+             return false, err
+        }
+        return false, nil
+    } else {
+        starredFolder := &models.StarredFolder{
+            UserID: userID,
+            FolderPath: virtualPath,
+        }
+        if err := s.starredFolderRepo.Create(starredFolder); err != nil {
+            return false, err
+        }
+        return true, nil
+    }
+}
+
 
 // GetImages получает последние изображения пользователя
 func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
@@ -530,4 +631,58 @@ func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
 		return nil, err
 	}
 	return s.EnrichFilesWithStarred(files, userID)
+}
+
+// DownloadFolderAsZip скачивает папку как ZIP архив
+func (s *FileService) DownloadFolderAsZip(virtualPath string, userID uint, dst io.Writer) error {
+	// Находим все файлы в папке рекурсивно
+	files, err := s.fileRepo.FindAllRecursively(userID, virtualPath)
+	if err != nil {
+		return fmt.Errorf("failed to find files: %w", err)
+	}
+
+	if len(files) == 0 {
+		return fmt.Errorf("no files found in this folder")
+	}
+
+	// Создаем zip writer
+	zipWriter := zip.NewWriter(dst)
+	defer zipWriter.Close()
+
+	// Ensure prefix ends with /
+	prefix := virtualPath
+	if prefix != "/" && len(prefix) > 0 && prefix[len(prefix)-1] != '/' {
+		prefix += "/"
+	}
+
+	for _, file := range files {
+		// Пропускаем виртуальные папки (если они вдруг попадут в выборку)
+		if file.MimeType == "inode/directory" {
+			continue
+		}
+
+		// Вычисляем относительный путь в архиве
+		// Например: virtualPath="/foo/", file="/foo/bar/baz.txt" -> "bar/baz.txt"
+		relPath := ""
+		if strings.HasPrefix(file.VirtualPath, prefix) {
+			relPath = file.VirtualPath[len(prefix):]
+		}
+		
+		zipPath := filepath.Join(relPath, file.OriginalName)
+
+		// Создаем entry в архиве
+		w, err := zipWriter.Create(zipPath)
+		if err != nil {
+			return fmt.Errorf("failed to create zip entry for %s: %w", zipPath, err)
+		}
+
+		// Расшифровываем файл прямо в zip writer
+		if err := s.decryptFile(file.Path, w); err != nil {
+			// Логируем ошибку, но продолжаем? Или прерываем?
+			// Лучше прервать, чтобы пользователь узнал об ошибке
+			return fmt.Errorf("failed to decrypt file %s: %w", file.OriginalName, err)
+		}
+	}
+
+	return nil
 }

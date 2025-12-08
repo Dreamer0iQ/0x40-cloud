@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x40 Cloud Logo Kit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen p-8 text-slate-800">
+
+    <div class="max-w-4xl mx-auto space-y-12">
+
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-bold text-slate-900">0x40 cloud</h1>
+            <p class="text-slate-500">Набор ассетов для бренда</p>
+        </div>
+
+        <!-- Main Logo Showcase -->
+        <div
+            class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex flex-col items-center justify-center space-y-8">
+            <div class="flex items-center gap-4">
+                <!-- LOGO SVG START -->
+                <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Left Blue Block -->
+                    <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#3B82F6" /> <!-- blue-500 -->
+                    <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#60A5FA" /> <!-- blue-400 top -->
+
+                    <!-- Right Darker Block -->
+                    <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#2563EB" /> <!-- blue-600 -->
+
+                    <!-- Bottom Center Block (The "Base") -->
+                    <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#1D4ED8" /> <!-- blue-700 -->
+                    <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1E40AF" /> <!-- blue-800 -->
+
+                    <!-- Floating "Data" bit (Top) -->
+                    <rect x="42" y="5" width="16" height="16" transform="rotate(45 50 13)" fill="#93C5FD"
+                        class="opacity-80" />
+                </svg>
+                <!-- LOGO SVG END -->
+
+                <div class="flex flex-col">
+                    <span class="text-4xl font-extrabold tracking-tight text-slate-800">0x40</span>
+                    <span class="text-sm font-semibold tracking-widest text-blue-600 uppercase">cloud storage</span>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Основная версия (Full Color)</p>
+        </div>
+
+        <!-- Variations Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- App Icon / Favicon -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center space-y-4">
+                <div
+                    class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#93C5FD" />
+                        <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#BFDBFE" />
+                        <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#60A5FA" />
+                        <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#3B82F6" />
+                        <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#2563EB" />
+                    </svg>
+                </div>
+                <p class="text-xs text-slate-400 font-mono">App Icon (Favicon)</p>
+            </div>
+
+            <!-- Dark Mode Preview -->
+            <div
+                class="bg-slate-900 rounded-xl shadow-sm border border-slate-800 p-8 flex flex-col items-center space-y-4">
+                <div class="flex items-center gap-3">
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" fill="#60A5FA" />
+                        <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" fill="#93C5FD" />
+                        <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" fill="#3B82F6" />
+                        <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" fill="#2563EB" />
+                        <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" fill="#1D4ED8" />
+                    </svg>
+                    <span class="text-2xl font-bold text-white">0x40</span>
+                </div>
+                <p class="text-xs text-slate-500 font-mono">Dark Mode</p>
+            </div>
+
+            <!-- Monochrome / Wireframe -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center space-y-4">
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25 25 L50 12.5 L75 25 L50 37.5 Z" stroke="#0F172A" stroke-width="4"
+                        stroke-linejoin="round" />
+                    <path d="M25 25 L50 37.5 L50 62.5 L25 50 Z" stroke="#0F172A" stroke-width="4"
+                        stroke-linejoin="round" />
+                    <path d="M75 25 L50 37.5 L50 62.5 L75 50 Z" stroke="#0F172A" stroke-width="4"
+                        stroke-linejoin="round" />
+                    <path d="M50 62.5 L25 50 L25 75 L50 87.5 Z" stroke="#0F172A" stroke-width="4"
+                        stroke-linejoin="round" />
+                    <path d="M50 62.5 L75 50 L75 75 L50 87.5 Z" stroke="#0F172A" stroke-width="4"
+                        stroke-linejoin="round" />
+                </svg>
+                <p class="text-xs text-slate-400 font-mono">Monochrome / Print</p>
+            </div>
+
+        </div>
+
+        <!-- Color Palette -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-6">Цветовая палитра</h3>
+            <div class="flex flex-wrap gap-4">
+                <div class="space-y-2">
+                    <div class="w-16 h-16 bg-blue-400 rounded-lg shadow-sm"></div>
+                    <p class="text-xs font-mono text-slate-500">#60A5FA</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="w-16 h-16 bg-blue-500 rounded-lg shadow-sm"></div>
+                    <p class="text-xs font-mono text-slate-500">#3B82F6</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="w-16 h-16 bg-blue-600 rounded-lg shadow-sm"></div>
+                    <p class="text-xs font-mono text-slate-500">#2563EB</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="w-16 h-16 bg-blue-700 rounded-lg shadow-sm"></div>
+                    <p class="text-xs font-mono text-slate-500">#1D4ED8</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="w-16 h-16 bg-blue-800 rounded-lg shadow-sm"></div>
+                    <p class="text-xs font-mono text-slate-500">#1E40AF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

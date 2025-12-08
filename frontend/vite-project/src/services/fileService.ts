@@ -131,6 +131,23 @@ export const fileService = {
     window.URL.revokeObjectURL(url);
   },
 
+  // Скачать папку как ZIP
+  downloadFolder: async (virtualPath: string, folderName: string): Promise<void> => {
+    const response = await api.get(`/files/download-folder`, {
+      params: { path: virtualPath },
+      responseType: 'blob',
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${folderName}.zip`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
   // Получить файл для предпросмотра (Blob)
   previewFile: async (fileId: string): Promise<Blob> => {
     try {
@@ -172,6 +189,12 @@ export const fileService = {
   // Переключить статус избранного
   toggleStarred: async (fileId: string): Promise<{ is_starred: boolean }> => {
     const response = await api.post(`/files/${fileId}/star`);
+    return response.data;
+  },
+
+  // Переключить статус избранного для папки
+  toggleStarredFolder: async (path: string): Promise<{ is_starred: boolean }> => {
+    const response = await api.post(`/files/folder/star`, { path });
     return response.data;
   },
 

@@ -183,3 +183,22 @@ func (r *FileRepository) FindImagesByUserID(userID uint, limit int) ([]models.Fi
 		Find(&files).Error
 	return files, err
 }
+
+func (r *FileRepository) FindAllRecursively(userID uint, virtualPathPrefix string) ([]models.File, error) {
+	var files []models.File
+
+	// Ensure prefix ends with / if not root
+	if virtualPathPrefix != "/" && len(virtualPathPrefix) > 0 && virtualPathPrefix[len(virtualPathPrefix)-1] != '/' {
+		virtualPathPrefix += "/"
+	}
+
+	searchPattern := virtualPathPrefix + "%"
+
+	err := r.db.Where("user_id = ? AND virtual_path LIKE ?", userID, searchPattern).
+		Find(&files).Error
+	
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}

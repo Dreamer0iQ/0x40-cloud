@@ -113,47 +113,75 @@
   gap: 6px;
 }
 
+
+
 .fileActions {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: 16px;
+}
 
-  button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    color: #808080;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.fileActions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #808080;
+  cursor: pointer;
+
+  /* Hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #3A3A3A;
+    color: #FFFFFF;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &[title="Delete"]:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: #FF6B6B;
+  }
+
+  &.starred {
+    color: #FFD700;
+
+    /* Always visible if starred */
+    opacity: 1 !important;
+    visibility: visible !important;
 
     &:hover {
-      background-color: #3A3A3A;
-      color: #FFFFFF;
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-
-    &[title="Delete"]:hover {
-      background-color: rgba(255, 107, 107, 0.1);
-      color: #FF6B6B;
-    }
-
-    &.starred {
+      background-color: rgba(255, 215, 0, 0.1);
       color: #FFD700;
-
-      &:hover {
-        background-color: rgba(255, 215, 0, 0.1);
-        color: #FFD700;
-      }
     }
+  }
+}
+
+.fileRow:hover .fileActions button {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+
+
+.folderIcon {
+  color: #FFD700 !important;
+  background-color: rgba(255, 215, 0, 0.1) !important;
+
+  svg {
+    fill: currentColor;
+    fill-opacity: 0.2;
   }
 }
 

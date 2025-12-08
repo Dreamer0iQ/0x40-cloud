@@ -42,10 +42,11 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	fileRepo := repositories.NewFileRepository(db)
 	starredRepo := repositories.NewStarredFileRepository(db)
+	starredFolderRepo := repositories.NewStarredFolderRepository(db)
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
-	fileService, err := services.NewFileService(fileRepo, starredRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
+	fileService, err := services.NewFileService(fileRepo, starredRepo, starredFolderRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
 	if err != nil {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}
@@ -84,6 +85,8 @@ func main() {
 			protected.GET("/files/images", fileHandler.GetImages)
 			protected.GET("/files/starred", fileHandler.GetStarredFiles)
 			protected.GET("/files/trash", fileHandler.GetDeletedFiles)
+			protected.GET("/files/download-folder", fileHandler.DownloadFolder)
+			protected.POST("/files/folder/star", fileHandler.ToggleStarredFolder)
 
 			// Роуты с :id параметром должны быть в конце
 			protected.POST("/files/:id/star", fileHandler.ToggleStarred)

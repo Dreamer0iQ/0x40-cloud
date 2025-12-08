@@ -50,6 +50,7 @@ func runMigrations(db *gorm.DB) error {
 		&models.User{},
 		&models.File{},
 		&models.StarredFile{},
+		&models.StarredFolder{},
 	); err != nil {
 		return err
 	}
