@@ -264,6 +264,42 @@ func (h *FileHandler) GetStarredFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }
 
+func (h *FileHandler) MoveFile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	fileIDStr := c.Param("id")
+	fileID, err := uuid.Parse(fileIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file ID"})
+		return
+	}
+
+	var req struct {
+		NewPath string `json:"new_path" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "new_path is required"})
+		return
+	}
+
+	file, err := h.fileService.MoveFile(fileID, userID.(uint), req.NewPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":           file.ID,
+		"virtual_path": file.VirtualPath,
+		"message":      "file moved successfully",
+	})
+}
+
 func (h *FileHandler) GetDeletedFiles(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

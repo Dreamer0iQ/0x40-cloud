@@ -52,6 +52,12 @@ export default function Storage({ onLogout }: StorageProps) {
     const handleDragEnter = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Ignore if internal drag (from FileList)
+        if (e.dataTransfer.types.includes('application/json')) {
+            return;
+        }
+
         dragCounterRef.current++;
         if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
             setIsDragging(true);
@@ -61,6 +67,11 @@ export default function Storage({ onLogout }: StorageProps) {
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (e.dataTransfer.types.includes('application/json')) {
+            return;
+        }
+
         dragCounterRef.current--;
         if (dragCounterRef.current === 0) {
             setIsDragging(false);
@@ -70,6 +81,10 @@ export default function Storage({ onLogout }: StorageProps) {
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (e.dataTransfer.types.includes('application/json')) {
+            return;
+        }
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -117,7 +132,7 @@ export default function Storage({ onLogout }: StorageProps) {
                 <SearchBar></SearchBar>
                 <div className={styles.container} style={{ "marginTop": "60px" }}>
                     {/* Breadcrumbs для навигации по папкам */}
-                    <Breadcrumbs currentPath={currentPath} basePath="/storage" />
+                    <Breadcrumbs currentPath={currentPath} basePath="/storage" onFileMove={handleFileUploaded} />
 
                     {/* Список всех файлов и папок в текущем пути */}
                     <FileList

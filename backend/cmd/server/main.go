@@ -89,10 +89,10 @@ func main() {
 			protected.DELETE("/files/folder", fileHandler.DeleteFolder)
 			protected.POST("/files/folder/star", fileHandler.ToggleStarredFolder)
 
-			// Роуты с :id параметром должны быть в конце
 			protected.POST("/files/:id/star", fileHandler.ToggleStarred)
 			protected.GET("/files/:id/download", fileHandler.DownloadFile)
 			protected.PATCH("/files/:id/rename", fileHandler.RenameFile)
+			protected.PATCH("/files/:id/move", fileHandler.MoveFile)
 			protected.DELETE("/files/:id", fileHandler.DeleteFile)
 			protected.POST("/files/:id/restore", fileHandler.RestoreFile)
 			protected.DELETE("/files/:id/permanent", fileHandler.DeleteFilePermanently)

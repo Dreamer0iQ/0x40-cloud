@@ -5,6 +5,7 @@ import { fileService } from '../../services/fileService';
 import { normalizePath } from '../../utils/pathUtils';
 import styles from './fileList.module.scss';
 import FilePreview from '../filePreview/filePreview';
+import { useToast } from '../../contexts/toastContext';
 
 interface FileListProps {
   refreshTrigger?: number;
@@ -21,6 +22,7 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   const [newFileName, setNewFileName] = useState('');
   const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const loadFiles = async () => {
     try {
@@ -215,6 +217,47 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, file: FileMetadata) => {
+    if (file.mime_type === 'inode/directory') {
+      // Prevent dragging folders for now if we don't support it fully
+      // or just let it be file move only as requested
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('application/json', JSON.stringify(file));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetFolder: FileMetadata) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/json');
+    if (!data) return;
+
+    try {
+      const draggedFile: FileMetadata = JSON.parse(data);
+      if (draggedFile.id === targetFolder.id) return; // Can't drop on itself (though folder vs file types prevent this mostly)
+      if (draggedFile.mime_type === 'inode/directory') return; // Don't allow moving folders into folders yet if complex
+
+      const targetPath = normalizePath(
+        currentPath === '/'
+          ? `/${targetFolder.original_name}/`
+          : `${currentPath}${targetFolder.original_name}/`
+      );
+
+      await fileService.moveFile(draggedFile.id, targetPath);
+      addToast(`Moved ${draggedFile.original_name} to ${targetFolder.original_name}`, 'success');
+      await loadFiles();
+    } catch (err) {
+      console.error('Failed to move file:', err);
+      addToast('Failed to move file', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.fileList}>
@@ -256,6 +299,8 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
           <div
             key={folder.original_name}
             className={styles.fileRow}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, folder)}
           >
             <div
               className={styles.fileInfo}
@@ -332,7 +377,12 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
 
         {/* Файлы */}
         {files.map((file) => (
-          <div key={file.id} className={styles.fileRow}>
+          <div
+            key={file.id}
+            className={styles.fileRow}
+            draggable
+            onDragStart={(e) => handleDragStart(e, file)}
+          >
             <div
               className={styles.fileInfo}
               onClick={() => handlePreview(file)}

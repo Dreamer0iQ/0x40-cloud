@@ -250,4 +250,10 @@ export const fileService = {
     const response = await api.get<FileListResponse>(`/files/images?limit=${limit}`);
     return response.data.files || [];
   },
+
+
+  // Переместить файл
+  moveFile: async (fileId: string, newPath: string): Promise<void> => {
+    await api.patch(`/files/${fileId}/move`, { new_path: newPath });
+  },
 };
