@@ -466,3 +466,31 @@ func (h *FileHandler) DownloadFolder(c *gin.Context) {
 		return
 	}
 }
+
+func (h *FileHandler) DeleteFolder(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	path := c.Query("path")
+	if path == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "path is required"})
+		return
+	}
+
+	// Валидируем путь
+	sanitizedPath, err := utils.SanitizePath(path)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		return
+	}
+
+	if err := h.fileService.DeleteFolder(sanitizedPath, userID.(uint)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "folder deleted successfully"})
+}

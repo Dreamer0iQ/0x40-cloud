@@ -86,6 +86,7 @@ func main() {
 			protected.GET("/files/starred", fileHandler.GetStarredFiles)
 			protected.GET("/files/trash", fileHandler.GetDeletedFiles)
 			protected.GET("/files/download-folder", fileHandler.DownloadFolder)
+			protected.DELETE("/files/folder", fileHandler.DeleteFolder)
 			protected.POST("/files/folder/star", fileHandler.ToggleStarredFolder)
 
 			// Роуты с :id параметром должны быть в конце

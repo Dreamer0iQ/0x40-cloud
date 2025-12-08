@@ -5,9 +5,10 @@ import FolderNameModal from '../folderNameModal/folderNameModal';
 
 interface ManageFilesProps {
     onFileUploaded?: () => void;
+    currentPath?: string;
 }
 
-const ManageFiles = forwardRef(({ onFileUploaded }: ManageFilesProps, ref) => {
+const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProps, ref) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const folderInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -33,7 +34,8 @@ const ManageFiles = forwardRef(({ onFileUploaded }: ManageFilesProps, ref) => {
             setShowFolderModal(true);
         } else {
             // Загрузка обычных файлов без модального окна
-            await uploadFiles(fileArray, false);
+            // Используем currentPath или '/' как виртуальный путь
+            await uploadFiles(fileArray, false, undefined, currentPath);
         }
     };
 
@@ -52,7 +54,7 @@ const ManageFiles = forwardRef(({ onFileUploaded }: ManageFilesProps, ref) => {
         }
     };
 
-    const uploadFiles = async (fileArray: File[], isFolder: boolean = false, customFolderName?: string) => {
+    const uploadFiles = async (fileArray: File[], isFolder: boolean = false, customFolderName?: string, targetPath?: string) => {
         if (fileArray.length === 0) return;
 
         setIsUploading(true);
@@ -79,7 +81,7 @@ const ManageFiles = forwardRef(({ onFileUploaded }: ManageFilesProps, ref) => {
                 // Загрузка одного файла
                 await fileService.uploadFile(fileArray[0], (progress) => {
                     setUploadProgress(progress);
-                });
+                }, targetPath);
             } else {
                 // Загрузка нескольких файлов
                 let completedFiles = 0;
@@ -89,7 +91,7 @@ const ManageFiles = forwardRef(({ onFileUploaded }: ManageFilesProps, ref) => {
                     }
                     const totalProgress = Math.round((completedFiles / fileArray.length) * 100);
                     setUploadProgress(totalProgress);
-                });
+                }, targetPath);
             }
 
             // Уведомляем родительский компонент об успешной загрузке

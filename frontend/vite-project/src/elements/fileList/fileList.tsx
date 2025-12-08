@@ -90,7 +90,16 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
       if (isTrash) {
         await fileService.deleteFilePermanently(file.id);
       } else {
-        await fileService.deleteFile(file.id);
+        if (file.mime_type === 'inode/directory') {
+          const folderPath = normalizePath(
+            currentPath === '/'
+              ? `/${file.original_name}/`
+              : `${currentPath}${file.original_name}/`
+          );
+          await fileService.deleteFolder(folderPath);
+        } else {
+          await fileService.deleteFile(file.id);
+        }
       }
       await loadFiles();
     } catch (err) {

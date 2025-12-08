@@ -686,3 +686,43 @@ func (s *FileService) DownloadFolderAsZip(virtualPath string, userID uint, dst i
 
 	return nil
 }
+
+// DeleteFolder удаляет папку и все её содержимое
+func (s *FileService) DeleteFolder(virtualPath string, userID uint) error {
+	// Находим все файлы в папке рекурсивно
+	files, err := s.fileRepo.FindAllRecursively(userID, virtualPath)
+	if err != nil {
+		return fmt.Errorf("failed to find files: %w", err)
+	}
+
+	// Удаляем каждый файл (soft delete)
+	for _, file := range files {
+		// Если это виртуальная папка (inode/directory), удаляем её тоже через репозиторий файлов
+		// Метод Delete в репозитории должен работать по ID
+		// Если у папки есть ID (она есть в БД), удаляем по ID.
+		// Если это просто сгруппированные файлы, то они удалятся, когда мы удалим все файлы.
+		
+		// В текущей реализации папки могут быть как отдельные записи (inode/directory), так и просто виртуальные.
+		// FindAllRecursively должен возвращать и те и другие, если они есть в БД.
+		
+		if err := s.fileRepo.Delete(file.ID); err != nil {
+			// Логируем ошибку, но продолжаем удаление других файлов?
+			// Или прерываем? Для консистентности лучше попробовать удалить всё что можно.
+			fmt.Printf("Failed to delete file %s during folder deletion: %v\n", file.ID, err)
+		}
+	}
+	
+	// Если папка была в starred, удаляем её оттуда
+	// Убедимся, что путь заканчивается на /
+	folderPath := virtualPath
+	if len(folderPath) > 0 && folderPath[len(folderPath)-1] != '/' {
+		folderPath += "/"
+	}
+	
+	if err := s.starredFolderRepo.Delete(userID, folderPath); err != nil {
+		// Игнорируем ошибку, если папки не было в избранном
+		_ = err
+	}
+
+	return nil
+}

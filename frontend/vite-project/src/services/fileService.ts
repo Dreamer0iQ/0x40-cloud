@@ -181,6 +181,11 @@ export const fileService = {
     await api.delete(`/files/${fileId}`);
   },
 
+  // Удалить папку
+  deleteFolder: async (path: string): Promise<void> => {
+    await api.delete(`/files/folder`, { params: { path } });
+  },
+
   // Переименовать файл
   renameFile: async (fileId: string, newName: string): Promise<void> => {
     await api.patch(`/files/${fileId}/rename`, { new_name: newName });
