@@ -6,9 +6,18 @@ interface FolderNameModalProps {
     defaultName: string;
     onConfirm: (folderName: string) => void;
     onCancel: () => void;
+    title?: string;
+    confirmText?: string;
 }
 
-export default function FolderNameModal({ isOpen, defaultName, onConfirm, onCancel }: FolderNameModalProps) {
+export default function FolderNameModal({
+    isOpen,
+    defaultName,
+    onConfirm,
+    onCancel,
+    title = 'Name your folder',
+    confirmText = 'Upload'
+}: FolderNameModalProps) {
     const [folderName, setFolderName] = useState(defaultName);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,7 +50,7 @@ export default function FolderNameModal({ isOpen, defaultName, onConfirm, onCanc
     return (
         <div className={styles.overlay} onClick={onCancel}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                <h2 className={styles.title}>Name your folder</h2>
+                <h2 className={styles.title}>{title}</h2>
                 <form onSubmit={handleSubmit}>
                     <input
                         ref={inputRef}
@@ -66,7 +75,7 @@ export default function FolderNameModal({ isOpen, defaultName, onConfirm, onCanc
                             className={styles.confirmButton}
                             disabled={!folderName.trim()}
                         >
-                            Upload
+                            {confirmText}
                         </button>
                     </div>
                 </form>

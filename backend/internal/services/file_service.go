@@ -216,6 +216,67 @@ func (s *FileService) UploadFile(userID uint, fileHeader *multipart.FileHeader) 
 	return s.UploadFileWithPath(userID, fileHeader, "/", "")
 }
 
+// CreateFolder создает новую папку (как файл-маркер)
+func (s *FileService) CreateFolder(userID uint, virtualPath, folderName string) (*models.File, error) {
+	// Нормализуем пути
+	if virtualPath == "" {
+		virtualPath = "/"
+	}
+	if !strings.HasSuffix(virtualPath, "/") {
+		virtualPath += "/"
+	}
+
+	// Проверяем, существует ли уже такая папка
+	// Мы ищем файл с таким именем и mime_type = inode/directory в данной директории
+	// В текущей реализации FindByUserIDAndPath возвращает все файлы в директории.
+	// Оптимизация: можно добавить метод для проверки конкретного имени, но пока так:
+	existingFiles, err := s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+	if err == nil {
+		for _, f := range existingFiles {
+			if f.OriginalName == folderName && f.MimeType == "inode/directory" {
+				return nil, fmt.Errorf("folder already exists")
+			}
+		}
+	}
+
+	// Создаем пустой файл-маркер на диске
+	// Используем хеш пустой строки
+	emptyHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	storagePath := s.getStoragePath(emptyHash)
+
+	// Если файл еще не создан (никто не создавал пустых папок/файлов), создаем его
+	if _, err := os.Stat(storagePath); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(storagePath), 0755); err != nil {
+			return nil, fmt.Errorf("failed to create directories: %w", err)
+		}
+		f, err := os.Create(storagePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create marker file: %w", err)
+		}
+		f.Close()
+	}
+
+	fileID := uuid.New()
+	fileModel := &models.File{
+		ID:            fileID,
+		UserID:        userID,
+		Filename:      uuid.New().String(), // Генерируем случайное имя, хотя физического файла уникального нет
+		OriginalName:  folderName,
+		Path:          storagePath,
+		VirtualPath:   virtualPath,
+		FolderName:    "", // Это сама папка, она не часть другой "загружаемой папки" в контексте UploadFolder
+		SHA256:        emptyHash,
+		MimeType:      "inode/directory",
+		Size:          0,
+		EncryptedSize: 0,
+	}
+
+	if err := s.fileRepo.Create(fileModel); err != nil {
+		return nil, fmt.Errorf("failed to create folder record: %w", err)
+	}
+
+	return fileModel, nil}
+
 // UploadFileWithPath загружает и шифрует файл с указанием виртуального пути
 func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.FileHeader, virtualPath, folderName string) (*models.File, error) {
 	// Открываем файл

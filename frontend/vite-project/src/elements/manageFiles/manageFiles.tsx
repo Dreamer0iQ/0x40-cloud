@@ -1,4 +1,5 @@
 import { useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import { useLocation } from 'react-router-dom';
 import styles from './manageFiles.module.scss';
 import { fileService } from '../../services/fileService';
 import FolderNameModal from '../folderNameModal/folderNameModal';
@@ -16,7 +17,15 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
     const [defaultFolderName, setDefaultFolderName] = useState('');
+    const [isCreatingNewFolder, setIsCreatingNewFolder] = useState(false);
+    const location = useLocation();
+
+    // Check if we are in storage route
+    const isStorageRoute = location.pathname.startsWith('/storage');
+    // We can create folder only in storage route
+    const canCreateFolder = isStorageRoute;
 
     const handleFileUpload = async (files: FileList | null, isFolder: boolean = false) => {
         if (!files || files.length === 0) return;
@@ -42,8 +51,24 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
 
     const handleFolderNameConfirm = async (folderName: string) => {
         setShowFolderModal(false);
-        await uploadFiles(pendingFiles, true, folderName);
-        setPendingFiles([]);
+
+        if (isCreatingNewFolder) {
+            try {
+                setIsUploading(true);
+                await fileService.createFolder(currentPath || '/', folderName);
+                onFileUploaded?.();
+                console.log(`✅ Folder "${folderName}" created successfully`);
+            } catch (error) {
+                console.error('Folder creation error:', error);
+                alert('Ошибка при создании папки');
+            } finally {
+                setIsUploading(false);
+                setIsCreatingNewFolder(false);
+            }
+        } else {
+            await uploadFiles(pendingFiles, true, folderName, currentPath);
+            setPendingFiles([]);
+        }
     };
 
     const handleFolderNameCancel = () => {
@@ -75,7 +100,7 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
                     }
                     const totalProgress = Math.round((completedFiles / fileArray.length) * 100);
                     setUploadProgress(totalProgress);
-                });
+                }, targetPath);
 
                 console.log(`✅ Folder "${folderName}" uploaded successfully`);
             } else if (fileArray.length === 1) {
@@ -117,6 +142,15 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
 
     const handleUploadFolderClick = () => {
         folderInputRef.current?.click();
+    };
+
+    const handleCreateFolderClick = () => {
+        if (!canCreateFolder) return;
+
+        setPendingFiles([]);
+        setDefaultFolderName('New Folder');
+        setIsCreatingNewFolder(true);
+        setShowFolderModal(true);
     };
 
     // Expose handleDroppedFiles to parent via ref
@@ -187,7 +221,12 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
                 <span>Upload folder</span>
             </button>
 
-            <button className={styles.menuItem} disabled>
+            <button
+                className={styles.menuItem}
+                disabled={isUploading || !canCreateFolder}
+                onClick={handleCreateFolderClick}
+                title={canCreateFolder ? "Create new folder" : "Folder can be created only in /storage"}
+            >
                 <svg width="24" height="24" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.5 32.5H37.5M30 25V40M30.1568 15.1568L29.8432 14.8432C28.9785 13.9784 28.546 13.546 28.0415 13.2368C27.594 12.9627 27.1063 12.7606 26.5963 12.6382C26.0208 12.5 25.4092 12.5 24.1863 12.5H15.5C12.6997 12.5 11.2996 12.5 10.2301 13.045C9.28923 13.5243 8.52432 14.2892 8.04497 15.2301C7.5 16.2996 7.5 17.6997 7.5 20.5V39.5C7.5 42.3003 7.5 43.7005 8.04497 44.77C8.52432 45.7108 9.28923 46.4757 10.2301 46.955C11.2996 47.5 12.6997 47.5 15.5 47.5H44.5C47.3002 47.5 48.7005 47.5 49.77 46.955C50.7108 46.4757 51.4757 45.7108 51.955 44.77C52.5 43.7005 52.5 42.3003 52.5 39.5V25.5C52.5 22.6997 52.5 21.2996 51.955 20.2301C51.4757 19.2892 50.7108 18.5243 49.77 18.045C48.7005 17.5 47.3002 17.5 44.5 17.5H35.8137C34.5907 17.5 33.9792 17.5 33.4037 17.3618C32.8937 17.2394 32.406 17.0373 31.9585 16.7632C31.454 16.454 31.0215 16.0216 30.1568 15.1568Z" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -207,6 +246,8 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
                 defaultName={defaultFolderName}
                 onConfirm={handleFolderNameConfirm}
                 onCancel={handleFolderNameCancel}
+                title={isCreatingNewFolder ? 'Create New Folder' : 'Name Uploaded Folder'}
+                confirmText={isCreatingNewFolder ? 'Create' : 'Upload'}
             />
         </section>
     );

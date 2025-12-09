@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/bhop_dynasty/0x40_cloud/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -141,4 +142,44 @@ func (h *FileHandler) DeleteFolder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "folder deleted successfully"})
+}
+
+func (h *FileHandler) CreateFolder(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req struct {
+		Path string `json:"path"`
+		Name string `json:"name" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+		return
+	}
+
+	// Валидируем имя папки
+	if req.Name == "" || strings.Contains(req.Name, "/") || strings.Contains(req.Name, "\\") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder name"})
+		return
+	}
+
+	// Валидируем путь
+	sanitizedPath, err := utils.SanitizePath(req.Path)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		return
+	}
+
+	// Создаем папку
+	file, err := h.fileService.CreateFolder(userID.(uint), sanitizedPath, req.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"folder": file})
 }

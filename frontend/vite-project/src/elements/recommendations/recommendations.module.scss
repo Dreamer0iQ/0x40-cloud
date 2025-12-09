@@ -6,6 +6,12 @@
   width: calc(80% - 72px);
   padding-top: 30px;
   padding-bottom: 30px;
+
+  @media (max-width: 1600px) {
+    padding: 30px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+  }
 }
 
 .header {
@@ -68,8 +74,8 @@
   row-gap: 40px;
 
   @media (max-width: 1600px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
   }
 }
 

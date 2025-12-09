@@ -55,7 +55,8 @@ export const fileService = {
   uploadFolder: async (
     files: File[],
     folderName: string,
-    onProgress?: (fileIndex: number, progress: number) => void
+    onProgress?: (fileIndex: number, progress: number) => void,
+    parentPath?: string
   ): Promise<FileUploadResponse[]> => {
     console.log(`📦 Starting upload of folder "${folderName}" with ${files.length} files`);
 
@@ -70,8 +71,16 @@ export const fileService = {
       const fileName = pathParts.pop();
 
       // Создаем виртуальный путь
-      // Например: "/MyFolder/subfolder/"
-      const virtualPath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
+      // Если parentPath задан, добавляем его
+      // Например: parentPath="/foo/", folder="bar/" -> "/foo/bar/"
+      let virtualPath = '/';
+      if (parentPath && parentPath !== '/') {
+        // Убеждаемся, что parentPath заканчивается на /
+        const prefix = parentPath.endsWith('/') ? parentPath : parentPath + '/';
+        virtualPath = prefix + (pathParts.length > 0 ? pathParts.join('/') + '/' : '');
+      } else {
+        virtualPath = pathParts.length > 0 ? '/' + pathParts.join('/') + '/' : '/';
+      }
 
       console.log(`  📄 File ${index + 1}/${files.length}: ${fileName} -> ${virtualPath}`);
 
@@ -255,5 +264,11 @@ export const fileService = {
   // Переместить файл
   moveFile: async (fileId: string, newPath: string): Promise<void> => {
     await api.patch(`/files/${fileId}/move`, { new_path: newPath });
+  },
+
+  // Создать папку
+  createFolder: async (path: string, name: string): Promise<FileMetadata> => {
+    const response = await api.post('/files/folder', { path, name });
+    return response.data.folder;
   },
 };
