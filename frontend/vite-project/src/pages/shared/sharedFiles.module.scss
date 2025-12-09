@@ -80,7 +80,8 @@
     font-size: 14px;
     transition: all 0.2s;
     color: var(--text-primary);
-
+    padding-left: 0;
+    
     &:hover {
         background-color: var(--bg-primary);
         border-color: var(--accent-color);
