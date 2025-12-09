@@ -70,7 +70,10 @@ export default function ToolBar({ children }: ToolBarProps) {
                     </svg>
                 </button>
 
-                <button className={styles.iconButton}>
+                <button className={`${styles.iconButton} ${isActive('/shared') ? styles.active : ''}`}
+                    onClick={() => navigate('/shared')}
+                    title="Shared Files"
+                >
                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.5 30C22.5 33.4517 19.7018 36.25 16.25 36.25C12.7982 36.25 10 33.4517 10 30C10 26.5483 12.7982 23.75 16.25 23.75C19.7018 23.75 22.5 26.5483 22.5 30Z" stroke="currentColor" strokeWidth="3.75" />
                         <path d="M35 16.25L22.5 25" stroke="currentColor" strokeWidth="3.75" strokeLinecap="round" />
@@ -91,7 +94,7 @@ export default function ToolBar({ children }: ToolBarProps) {
                 </button>
 
                 <div className={styles.bottomSection}>
-                    <button 
+                    <button
                         className={styles.themeToggle}
                         onClick={toggleTheme}
                         title={theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на темную тему'}

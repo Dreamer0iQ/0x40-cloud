@@ -5,6 +5,8 @@ import Storage from './pages/storage/storage';
 import Favourites from './pages/favourites/favourites';
 import Images from './pages/images/images';
 import Trash from './pages/trash/trash';
+import SharedFiles from './pages/shared/SharedFiles';
+import DownloadPage from './pages/share/DownloadPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { authService } from './services/authService';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -55,6 +57,14 @@ function App() {
               <Trash />
             </ProtectedRoute>
           } />
+
+          <Route path="/shared" element={
+            <ProtectedRoute>
+              <SharedFiles />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/share/:token" element={<DownloadPage />} />
 
           <Route path="/" element={
             authService.isAuthenticated()

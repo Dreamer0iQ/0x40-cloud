@@ -6,6 +6,7 @@ import (
 	"github.com/bhop_dynasty/0x40_cloud/internal/config"
 	"github.com/bhop_dynasty/0x40_cloud/internal/handlers"
 	"github.com/bhop_dynasty/0x40_cloud/internal/middleware"
+	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
 	"github.com/bhop_dynasty/0x40_cloud/internal/services"
 	"github.com/gin-contrib/cors"
@@ -43,6 +44,7 @@ func main() {
 	fileRepo := repositories.NewFileRepository(db)
 	starredRepo := repositories.NewStarredFileRepository(db)
 	starredFolderRepo := repositories.NewStarredFolderRepository(db)
+	sharedFileRepo := repositories.NewSharedFileRepository(db)
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
@@ -51,10 +53,12 @@ func main() {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}
 	activityService := services.NewActivityService(redisClient, fileRepo)
+	shareService := services.NewShareService(sharedFileRepo, fileRepo, fileService)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	fileHandler := handlers.NewFileHandler(fileService, activityService)
+	shareHandler := handlers.NewShareHandler(shareService)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -71,10 +75,22 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 		}
 
+		// Public share routes
+		public := api.Group("/public")
+		{
+			public.GET("/share/:token", shareHandler.GetSharedFile)
+			public.GET("/share/:token/download", shareHandler.DownloadSharedFile)
+		}
+
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddleware(authService))
 		{
 			protected.GET("/auth/me", authHandler.GetMe)
+
+			// Share management routes
+			protected.POST("/files/:id/share", shareHandler.CreateShare)
+			protected.GET("/shares", shareHandler.ListShares)
+			protected.DELETE("/shares/:token", shareHandler.RevokeShare)
 
 			// File routes - специфичные роуты должны идти ПЕРЕД :id параметрами
 			protected.POST("/files/upload", fileHandler.Upload)
@@ -111,6 +127,10 @@ func main() {
 	log.Printf("📍 Environment: %s", cfg.Server.Env)
 	log.Printf("🌐 CORS allowed origins: %v", cfg.CORS.AllowedOrigins)
 	log.Printf("💾 Storage path: %s", cfg.Storage.Path)
+	// Инициализация базы данных
+	if err := db.AutoMigrate(&models.User{}, &models.File{}, &models.StarredFile{}, &models.StarredFolder{}, &models.SharedFile{}); err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
 
 	if err := r.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

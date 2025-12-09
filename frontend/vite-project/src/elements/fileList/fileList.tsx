@@ -7,6 +7,7 @@ import styles from './fileList.module.scss';
 import FilePreview from '../filePreview/filePreview';
 import { useToast } from '../../contexts/toastContext';
 import DataPulseLoader from '../Logo/DataPulseLoader';
+import ShareModal from '../shareModal/ShareModal';
 
 interface FileListProps {
   refreshTrigger?: number;
@@ -22,6 +23,7 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState('');
   const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
+  const [shareFile, setShareFile] = useState<FileMetadata | null>(null);
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -77,6 +79,10 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
       console.error('Failed to download file:', err);
       alert('Failed to download file');
     }
+  };
+
+  const handleShare = (file: FileMetadata) => {
+    setShareFile(file);
   };
 
   const handleDelete = async (file: FileMetadata) => {
@@ -455,6 +461,13 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
                       <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
+                  <button onClick={() => handleShare(file)} title="Share">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <polyline points="15 3 21 3 21 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                   <button onClick={() => handleDelete(file)} title="Delete">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -488,6 +501,11 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
           />
         )
       }
+      <ShareModal
+        isOpen={!!shareFile}
+        onClose={() => setShareFile(null)}
+        file={shareFile}
+      />
     </div >
   );
 }
