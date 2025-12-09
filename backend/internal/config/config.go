@@ -51,6 +51,7 @@ type CORSConfig struct {
 type StorageConfig struct {
 	Path          string
 	EncryptionKey string
+	Limit         int64
 }
 
 func Load() *Config {
@@ -78,9 +79,10 @@ func Load() *Config {
 		CORS: CORSConfig{
 			AllowedOrigins: strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:5173"), ","),
 		},
-		Storage: StorageConfig{
+	Storage: StorageConfig{
 			Path:          getEnv("STORAGE_PATH", "./storage"),
 			EncryptionKey: getEnv("ENCRYPTION_KEY", "12345678901234567890123456789012"), // ДОЛЖЕН БЫТЬ 32 байта!
+			Limit:         int64(getEnvAsInt("STORAGE_LIMIT_BYTES", 10*1024*1024*1024)),        // 10 GB default
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),

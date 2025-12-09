@@ -1,0 +1,131 @@
+.container {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: calc(80% - 20px);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .usageText {
+        font-size: 14px;
+        color: var(--text-secondary);
+
+        span {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+    }
+}
+
+.barContainer {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+
+    // Add subtle shadow
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.segment {
+    height: 100%;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .size {
+        color: var(--text-tertiary);
+        margin-left: 4px;
+    }
+}
+
+.trashAlert {
+    margin-top: 4px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-secondary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+
+    svg {
+        color: var(--accent-error);
+    }
+
+    .trashSize {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+}
+
+@keyframes shim {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.loading {
+    height: 12px;
+    width: 100%;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+        animation: shim 1.5s infinite;
+    }
+}

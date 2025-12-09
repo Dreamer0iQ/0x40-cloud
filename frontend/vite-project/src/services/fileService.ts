@@ -1,8 +1,14 @@
 import api from '../api/axios';
-import type { FileUploadResponse, FileListResponse, FileMetadata } from '../types/file';
+import type { FileUploadResponse, FileListResponse, FileMetadata, StorageStats } from '../types/file';
 import { get, set, clear } from 'idb-keyval';
 
 export const fileService = {
+  // Получить статистику хранилища
+  getStorageStats: async (): Promise<StorageStats> => {
+    const response = await api.get<StorageStats>('/files/storage');
+    return response.data;
+  },
+
   // Загрузить файл
   uploadFile: async (
     file: File,

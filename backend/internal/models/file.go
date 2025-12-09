@@ -34,3 +34,15 @@ type FileUploadResponse struct {
 	Size     int64  `json:"size"`
 	URL      string `json:"url"`
 }
+
+type StorageStats struct {
+	TotalUsed int64 `json:"total_used"`
+	ImageSize int64 `json:"image_size"`
+	VideoSize int64 `json:"video_size"`
+	DocSize   int64 `json:"doc_size"`
+	OtherSize int64 `json:"other_size"`
+	TrashSize int64 `json:"trash_size"`
+	Limit         int64 `json:"limit"`
+	PhysicalTotal int64 `json:"physical_total"`
+	PhysicalFree  int64 `json:"physical_free"`
+}

@@ -46,7 +46,7 @@ func main() {
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
-	fileService, err := services.NewFileService(fileRepo, starredRepo, starredFolderRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey)
+	fileService, err := services.NewFileService(fileRepo, starredRepo, starredFolderRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey, cfg.Storage.Limit)
 	if err != nil {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}
@@ -78,6 +78,7 @@ func main() {
 
 			// File routes - специфичные роуты должны идти ПЕРЕД :id параметрами
 			protected.POST("/files/upload", fileHandler.Upload)
+			protected.GET("/files/storage", fileHandler.GetStorageStats)
 			protected.GET("/files", fileHandler.GetUserFiles)
 			protected.GET("/files/by-path", fileHandler.GetFilesByPath)
 			protected.GET("/files/recent", fileHandler.GetRecentFiles)

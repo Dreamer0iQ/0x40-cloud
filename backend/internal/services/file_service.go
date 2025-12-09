@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
@@ -25,9 +26,10 @@ type FileService struct {
 	starredFolderRepo *repositories.StarredFolderRepository
 	storageDir        string
 	encryptionKey     []byte // 32 bytes для AES-256
+	storageLimit      int64
 }
 
-func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, starredFolderRepo *repositories.StarredFolderRepository, storageDir string, encryptionKey string) (*FileService, error) {
+func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, starredFolderRepo *repositories.StarredFolderRepository, storageDir string, encryptionKey string, storageLimit int64) (*FileService, error) {
 	// Убеждаемся, что ключ имеет правильную длину (32 байта для AES-256)
 	key := []byte(encryptionKey)
 	if len(key) != 32 {
@@ -45,6 +47,7 @@ func NewFileService(fileRepo *repositories.FileRepository, starredRepo *reposito
 		starredFolderRepo: starredFolderRepo,
 		storageDir:        storageDir,
 		encryptionKey:     key,
+		storageLimit:      storageLimit,
 	}, nil
 }
 
@@ -584,4 +587,39 @@ func (s *FileService) DeleteFolder(virtualPath string, userID uint) error {
 	}
 
 	return nil
+}
+
+// getFileSystemUsage returns total and free bytes for the storage filesystem
+func (s *FileService) getFileSystemUsage() (total, free uint64, err error) {
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(s.storageDir, &stat); err != nil {
+		return 0, 0, err
+	}
+	// Available blocks * size per block = available space in bytes
+	// Total blocks * size per block = total space in bytes
+	free = uint64(stat.Bavail) * uint64(stat.Bsize)
+	total = uint64(stat.Blocks) * uint64(stat.Bsize)
+	return total, free, nil
+}
+
+// GetStorageStats получает статистику использования хранилища
+func (s *FileService) GetStorageStats(userID uint) (*models.StorageStats, error) {
+	stats, err := s.fileRepo.GetStorageStats(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add logical limit
+	stats.Limit = s.storageLimit
+
+	// Add physical stats
+	total, free, err := s.getFileSystemUsage()
+	if err != nil {
+		fmt.Printf("Warning: failed to get disk usage: %v\n", err)
+	} else {
+		stats.PhysicalTotal = int64(total)
+		stats.PhysicalFree = int64(free)
+	}
+
+	return stats, nil
 }

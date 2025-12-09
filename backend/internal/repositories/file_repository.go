@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"github.com/bhop_dynasty/0x40_cloud/internal/models"
+	"strings"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -201,4 +203,66 @@ func (r *FileRepository) FindAllRecursively(userID uint, virtualPathPrefix strin
 		return nil, err
 	}
 	return files, nil
+}
+
+func (r *FileRepository) GetStorageStats(userID uint) (*models.StorageStats, error) {
+	stats := &models.StorageStats{}
+
+	// Calculate active files stats
+	type Result struct {
+		MimeType string
+		Size     int64
+	}
+
+	var results []Result
+	err := r.db.Model(&models.File{}).
+		Select("mime_type, size").
+		Where("user_id = ?", userID).
+		Find(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range results {
+		stats.TotalUsed += res.Size
+		if strings.HasPrefix(res.MimeType, "image/") {
+			stats.ImageSize += res.Size
+		} else if strings.HasPrefix(res.MimeType, "video/") {
+			stats.VideoSize += res.Size
+		} else if strings.HasPrefix(res.MimeType, "application/pdf") ||
+			strings.HasPrefix(res.MimeType, "application/msword") ||
+			strings.HasPrefix(res.MimeType, "application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+			strings.HasPrefix(res.MimeType, "text/") {
+			stats.DocSize += res.Size
+		} else {
+			stats.OtherSize += res.Size
+		}
+	}
+
+	// Calculate trash size
+	// Using Row().Scan is tricky with NULL sum, so we count rows first or use SQL Coalesce
+	// SQLite/Postgres COALESCE works. GORM Raw is safest.
+	// But let's try standard GORM approach for sum with a pointer receiver if needed, or query Count.
+	// Let's use a struct scan to be safe.
+	var trashResult struct {
+		TotalSize int64
+	}
+	
+	// Note: Sum() on empty set returns NULL in SQL. GORM might not handle scanning NULL into int64 gracefully directly.
+	// But let's check if rows exist first? No, that's extra query.
+	// Let's use COALESCE in select.
+	err = r.db.Unscoped().Model(&models.File{}).
+		Select("COALESCE(SUM(size), 0) as total_size").
+		Where("user_id = ? AND deleted_at IS NOT NULL", userID).
+		Scan(&trashResult).Error
+	
+	if err != nil {
+		// Log error but maybe don't fail entire request?
+		// For now return error
+		return nil, err
+	}
+	stats.TrashSize = trashResult.TotalSize
+
+	return stats, nil
 }
