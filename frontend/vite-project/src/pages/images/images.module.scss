@@ -5,6 +5,7 @@
     position: fixed;
     top: 0;
     left: 0;
+    background-color: var(--bg-secondary);
 }
 
 .dropOverlay {
@@ -14,7 +15,7 @@
     right: 300px; // до правой панели с загрузкой
     bottom: 0;
     background: rgba(0, 96, 255, 0.1);
-    border: 4px dashed #0060FF;
+    border: 4px dashed var(--accent-primary);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -30,14 +31,14 @@
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    color: #0060FF;
+    color: var(--accent-primary);
     font-size: 1.5rem;
     font-weight: 600;
 
     svg {
         width: 64px;
         height: 64px;
-        color: #0060FF;
+        color: var(--accent-primary);
     }
 
     span {
@@ -47,7 +48,7 @@
 
 @keyframes borderPulse {
     0%, 100% {
-        border-color: #0060FF;
+        border-color: var(--accent-primary);
         border-width: 4px;
         box-shadow: 0 0 0 0 rgba(0, 96, 255, 0.4),
                     inset 0 0 0 0 rgba(0, 96, 255, 0.4);
@@ -63,8 +64,8 @@
 
 .container {
     min-height: 100vh;
-    background: #272727;
-    color: #FFFFFF;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     padding: 2rem;
     width: 100%;
 }
@@ -75,7 +76,7 @@
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #3A3A3A;
+    border-bottom: 1px solid var(--border-secondary);
 
     h1 {
         font-size: 2rem;
@@ -86,10 +87,10 @@
 
 .logoutBtn {
     padding: 0.75rem 1.5rem;
-    background: #272727;
-    border: 1px solid #3A3A3A;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-secondary);
     border-radius: 8px;
-    color: #FFFFFF;
+    color: var(--text-primary);
     font-size: 0.9375rem;
     font-weight: 500;
     cursor: pointer;

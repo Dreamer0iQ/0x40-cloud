@@ -248,6 +248,8 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
     };
 
     if (files.length === 0) {
+        if (type === 'suggested') return null;
+
         return (
             <div className={styles.fileList} style={{ width: '80%' }}>
                 <div className={styles.empty}>

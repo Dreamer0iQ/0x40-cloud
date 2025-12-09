@@ -14,7 +14,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
-  background-color: #1E1E1E;
+  background-color: var(--bg-primary);
   border-radius: 8px;
   position: relative;
 }
@@ -27,7 +27,7 @@
 
 .circleBackground {
   fill: none;
-  stroke: #3A3A3A;
+  stroke: var(--bg-tertiary);
   stroke-width: 8;
 }
 
@@ -55,7 +55,7 @@
   transform: translate(-50%, -50%);
   font-size: 24px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--text-primary);
   transition: opacity 0.3s ease;
   animation: fadeIn 0.5s ease-out 0.3s backwards;
   margin-top: 30px;
@@ -74,7 +74,7 @@
 
 .label {
   font-size: 13px;
-  color: #808080;
+  color: var(--text-tertiary);
   text-align: center;
   margin-top: 40px;
 }
@@ -93,7 +93,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #B0B0B0;
+  color: var(--text-secondary);
 }
 
 .legendDot {

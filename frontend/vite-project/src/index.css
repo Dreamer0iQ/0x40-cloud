@@ -1,3 +1,57 @@
+/* CSS переменные для темной темы (по умолчанию) */
+:root {
+  /* Backgrounds */
+  --bg-primary: #1E1E1E;
+  --bg-secondary: #272727;
+  --bg-tertiary: #3A3A3A;
+  --bg-hover: #272727;
+  --bg-active: #3A3A3A;
+  
+  /* Text colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+  --text-tertiary: #808080;
+  --text-muted: #6B6B6B;
+  
+  /* Accent colors */
+  --accent-primary: #0060FF;
+  --accent-primary-hover: #0050DD;
+  --accent-error: #FF3B30;
+  --accent-success: #34C759;
+  
+  /* Borders */
+  --border-primary: #272727;
+  --border-secondary: #3A3A3A;
+  --border-hover: #4A4A4A;
+}
+
+/* Светлая тема */
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #eeeeee;
+  --bg-tertiary: #E5E5E5;
+  --bg-hover: #F0F0F0;
+  --bg-active: #E0E0E0;
+  
+  /* Text colors */
+  --text-primary: #1E1E1E;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #808080;
+  --text-muted: #9B9B9B;
+  
+  /* Accent colors остаются теми же */
+  --accent-primary: #0060FF;
+  --accent-primary-hover: #0050DD;
+  --accent-error: #FF3B30;
+  --accent-success: #34C759;
+  
+  /* Borders */
+  --border-primary: #E5E5E5;
+  --border-secondary: #D0D0D0;
+  --border-hover: #C0C0C0;
+}
+
 /* Глобальные стили */
 * {
   margin: 0;
@@ -12,6 +66,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {

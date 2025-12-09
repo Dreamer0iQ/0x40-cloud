@@ -1,5 +1,5 @@
 .recommendations {
-  background-color: #1E1E1E;
+  background-color: var(--bg-primary);
   border-radius: 8px;
   padding: 50px;
   margin: 20px;
@@ -23,7 +23,7 @@
   h3 {
     font-size: 15px;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--text-primary);
     margin: 0;
   }
 }
@@ -51,7 +51,7 @@
 .closeBtn {
   background: none;
   border: none;
-  color: #B0B0B0;
+  color: var(--text-secondary);
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -63,7 +63,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: #FFFFFF;
+    color: var(--text-primary);
   }
 }
 
@@ -100,7 +100,7 @@
     transform: translateY(-2px);
 
     .iconWrapper {
-      background-color: #3A3A3A;
+      background-color: var(--bg-tertiary);
     }
   }
 
@@ -113,14 +113,14 @@
     }
 
     .iconWrapper {
-      background-color: #3A3A3A;
+      background-color: var(--bg-tertiary);
     }
   }
 }
 
 .iconWrapper {
   position: relative;
-  background-color: #272727;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   padding: 20px;
   display: flex;
@@ -214,7 +214,7 @@
 
 .fileName {
   font-size: 14px;
-  color: #FFFFFF;
+  color: var(--text-primary);
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -223,17 +223,17 @@
 
 .fileTime {
   font-size: 12px;
-  color: #808080;
+  color: var(--text-tertiary);
 }
 
 .renameInput {
   width: 100%;
-  background: #2c2c2c;
+  background: var(--bg-secondary);
   border: 1px solid #3B82F6;
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 14px;
-  color: #ffffff;
+  color: var(--text-primary);
   outline: none;
   font-family: inherit;
 

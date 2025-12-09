@@ -36,7 +36,7 @@
 .breadcrumbLink {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 4px;
@@ -54,7 +54,7 @@
     }
     
     &.active {
-        color: #FFFFFF;
+        color: var(--text-primary);
         font-weight: 500;
         cursor: default;
     }
@@ -65,7 +65,7 @@
 }
 
 .separator {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--text-tertiary);
     font-size: 12px;
     user-select: none;
 }

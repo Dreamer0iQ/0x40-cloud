@@ -1,8 +1,9 @@
 .storageWrapper {
     width: 100%;
     height: 100vh;
-    background: #272727;
-    color: white;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -16,7 +17,7 @@
     justify-content: center;
     height: 100vh;
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-secondary);
 }
 
 .dropOverlay {
@@ -26,7 +27,7 @@
     right: 300px;
     bottom: 0;
     background: rgba(0, 96, 255, 0.1);
-    border: 4px dashed #0060FF;
+    border: 4px dashed var(--accent-primary);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -42,7 +43,7 @@
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    color: #0060FF;
+    color: var(--accent-primary);
     font-size: 1.5rem;
     font-weight: 600;
 
