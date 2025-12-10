@@ -13,6 +13,19 @@
   border-right: 1px solid var(--border-primary);
   flex-shrink: 0;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+  z-index: 1000;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0 10px;
+    top: auto;
+    bottom: 0;
+    border-right: none;
+    border-top: 1px solid var(--border-primary);
+  }
 }
 
 .logo {
@@ -24,9 +37,13 @@
   align-items: center;
   justify-content: center;
   transition: color 0.3s ease;
-  
+
   svg {
     fill: none;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
   }
 }
 
@@ -42,31 +59,34 @@
   background: none;
   border: none;
   padding: 0;
-  
+
   svg {
     width: 20px;
     height: 20px;
     fill: none;
-    
-    path, circle {
+
+    path,
+    circle {
       stroke: var(--text-tertiary);
       fill: none;
       transition: stroke 0.3s ease;
     }
   }
-  
+
   &:hover {
     background-color: var(--bg-hover);
-    
-    svg path, svg circle {
+
+    svg path,
+    svg circle {
       stroke: var(--text-primary);
     }
   }
-  
+
   &.active {
     background-color: var(--bg-active);
-    
-    svg path, svg circle {
+
+    svg path,
+    svg circle {
       stroke: var(--accent-primary);
     }
   }
@@ -77,6 +97,12 @@
   display: flex;
   flex-direction: column;
   gap: 25px;
+
+  @media (max-width: 768px) {
+    margin-top: 0;
+    flex-direction: row;
+    gap: 10px;
+  }
 }
 
 .themeToggle {
@@ -92,22 +118,24 @@
   border: none;
   padding: 0;
   color: var(--text-primary);
-  
+
   svg {
     fill: none;
     transition: transform 0.3s ease;
-    
-    path, circle, line {
+
+    path,
+    circle,
+    line {
       stroke: currentColor;
       fill: none;
     }
   }
-  
+
   &:hover {
     background-color: var(--bg-hover);
     transform: scale(1.05);
   }
-  
+
   &:active {
     transform: scale(0.95);
   }
@@ -119,4 +147,12 @@
   border-top: 1px solid var(--border-secondary);
   margin-left: 80px;
   transition: border-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 70px;
+    /* Space for bottom bar */
+    flex-direction: column;
+  }
 }

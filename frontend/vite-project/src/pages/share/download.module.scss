@@ -28,6 +28,12 @@
     padding: 40px;
     width: 100%;
     max-width: 500px;
+
+    @media (max-width: 768px) {
+        max-width: 90%;
+        padding: 24px;
+    }
+
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     display: flex;

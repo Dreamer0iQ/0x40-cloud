@@ -48,7 +48,7 @@ export default function SharedFiles() {
         <div className={styles.wrapper}>
             <ToolBar>
                 <SearchBar />
-                <div className={styles.container} style={{ marginTop: '60px' }}>
+                <div className={styles.container}>
                     <h1 className={styles.title}>Shared Files</h1>
 
                     {loading ? (

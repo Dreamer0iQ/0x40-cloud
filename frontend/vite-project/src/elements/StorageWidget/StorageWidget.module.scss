@@ -7,6 +7,11 @@
     flex-direction: column;
     gap: 20px;
     width: calc(80% - 20px);
+
+    @media (max-width: 768px) {
+        width: 100%;
+        padding: 16px;
+    }
 }
 
 .header {
@@ -97,6 +102,10 @@
     .trashSize {
         color: var(--text-primary);
         font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        display: none;
     }
 }
 

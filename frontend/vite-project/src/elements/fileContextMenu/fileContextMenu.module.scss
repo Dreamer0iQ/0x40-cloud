@@ -1,5 +1,7 @@
 .contextMenu {
-    position: fixed;
+    position: absolute;
+    top: 45px;
+    right: 8px;
     background: #2c2c2c;
     border: 1px solid #404040;
     border-radius: 8px;
@@ -15,6 +17,7 @@
         opacity: 0;
         transform: translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

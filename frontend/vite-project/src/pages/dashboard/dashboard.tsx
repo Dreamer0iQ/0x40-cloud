@@ -23,12 +23,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
     useEffect(() => {
         loadUser();
-
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
     }, []);
 
     const loadUser = async () => {
@@ -115,7 +109,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             )}
             <ToolBar>
                 <SearchBar></SearchBar>
-                <div className={styles.container} style={{ "marginTop": "60px" }}>
+                <div className={styles.container}>
                     <div style={{ marginBottom: '24px' }}>
                         <StorageWidget />
                     </div>

@@ -1,11 +1,17 @@
 .wrapper {
-    height: 100vh;
+    min-height: 100vh;
     background-color: var(--bg-primary);
 }
 
 .container {
     padding: 24px;
     width: 100%;
+    margin-top: 60px;
+
+    @media (max-width: 768px) {
+        margin-top: 0;
+        padding: 16px;
+    }
 }
 
 .title {
@@ -35,6 +41,10 @@
     font-weight: 600;
     font-size: 14px;
     color: var(--text-secondary);
+
+    @media (max-width: 768px) {
+        display: none;
+    }
 }
 
 .item {
@@ -51,6 +61,23 @@
 
     &:hover {
         background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    @media (max-width: 768px) {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 12px;
+
+        &:last-child {
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border-color);
+        }
     }
 }
 
@@ -69,6 +96,18 @@
 .actions {
     display: flex;
     gap: 12px;
+
+    @media (max-width: 768px) {
+        width: 100%;
+        margin-top: 8px;
+        justify-content: space-between;
+
+        button {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+        }
+    }
 }
 
 .linkBtn {
@@ -81,7 +120,7 @@
     transition: all 0.2s;
     color: var(--text-primary);
     padding-left: 0;
-    
+
     &:hover {
         background-color: var(--bg-primary);
         border-color: var(--accent-color);

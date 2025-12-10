@@ -131,11 +131,9 @@ export default function Storage({ onLogout }: StorageProps) {
             )}
             <ToolBar>
                 <SearchBar></SearchBar>
-                <div className={styles.container} style={{ "marginTop": "60px" }}>
-                    {/* Breadcrumbs для навигации по папкам */}
+                <div className={styles.container}>
                     <Breadcrumbs currentPath={currentPath} basePath="/storage" onFileMove={handleFileUploaded} />
 
-                    {/* Список всех файлов и папок в текущем пути */}
                     <FileList
                         refreshTrigger={refreshTrigger}
                         currentPath={currentPath}

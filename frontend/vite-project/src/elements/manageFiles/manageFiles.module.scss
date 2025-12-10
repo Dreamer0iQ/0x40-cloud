@@ -6,6 +6,17 @@
   position: fixed;
   right: 0;
   height: 100%;
+
+  @media (max-width: 768px) {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-primary);
+    order: -1;
+    z-index: 101;
+    /* Ensure it stays above if needed */
+  }
 }
 
 .title {

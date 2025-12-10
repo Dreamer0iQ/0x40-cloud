@@ -4,6 +4,13 @@
   padding: 50px;
   margin: 20px;
   width: calc(80% - 72px);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin: 10px 0;
+    padding: 20px;
+  }
+
   padding-top: 30px;
   padding-bottom: 30px;
 
@@ -76,6 +83,11 @@
   @media (max-width: 1600px) {
     grid-template-columns: repeat(4, 1fr);
     gap: 30px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
@@ -174,6 +186,11 @@
   // Когда кнопка в фокусе (меню открыто), держим её видимой
   &:focus {
     opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.5);
   }
 }
 

@@ -13,6 +13,13 @@
   z-index: 100;
   border-bottom: 1px solid var(--border-primary);
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    left: 0;
+    padding: 0 16px;
+    height: 60px;
+  }
 }
 
 .logo {
@@ -20,7 +27,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  
+
   svg {
     width: 40px;
     height: 40px;
@@ -36,12 +43,17 @@
   transition: all 0.3s ease;
   width: 50px;
   overflow: hidden;
-  
+
   &.expanded {
-    width: 500px;
     background-color: var(--bg-secondary);
   }
-  
+
+  @media (max-width: 768px) {
+    &.expanded {
+      width: 100%;
+    }
+  }
+
   &:hover {
     border: soild 1px #ffffff;
   }
@@ -60,11 +72,11 @@
   height: 24px;
   color: #808080;
   transition: color 0.3s ease;
-  
+
   &:hover {
     color: var(--text-primary);
   }
-  
+
   svg {
     width: 25px;
     height: 25px;
@@ -82,11 +94,11 @@
   opacity: 0;
   width: 0;
   transition: opacity 0.3s ease;
-  
+
   &::placeholder {
     color: var(--text-tertiary);
   }
-  
+
   .expanded & {
     opacity: 1;
     width: auto;

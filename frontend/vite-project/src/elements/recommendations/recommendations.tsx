@@ -74,7 +74,6 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
     const [files, setFiles] = useState<FileMetadata[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeMenuFileId, setActiveMenuFileId] = useState<string | null>(null);
-    const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>();
     const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
     const [newFileName, setNewFileName] = useState('');
     const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
@@ -143,14 +142,11 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
 
     const handleMenuOpen = (e: React.MouseEvent, fileId: string) => {
         e.stopPropagation();
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setMenuPosition({ x: rect.left, y: rect.bottom + 5 });
         setActiveMenuFileId(fileId);
     };
 
     const handleMenuClose = () => {
         setActiveMenuFileId(null);
-        setMenuPosition(undefined);
     };
 
     const handleRename = () => {
@@ -329,7 +325,6 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
                                 onRename={handleRename}
                                 onDelete={handleDelete}
                                 onDownload={() => handleDownload(file)}
-                                position={menuPosition}
                             />
                         </div>
                     ))}

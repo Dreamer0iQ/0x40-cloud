@@ -59,11 +59,19 @@
   transition: all 0.2s ease;
   border: 1px solid transparent;
 
+
+
   &:hover {
     background-color: var(--bg-secondary);
     border-color: var(--border-secondary);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 
@@ -123,6 +131,12 @@
   align-items: center;
   gap: 8px;
   margin-left: 16px;
+
+  @media (max-width: 768px) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .fileActions button {
@@ -141,6 +155,11 @@
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s ease;
+
+  @media (max-width: 768px) {
+    opacity: 1;
+    visibility: visible;
+  }
 
   &:hover {
     background-color: var(--bg-tertiary);
