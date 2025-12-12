@@ -300,7 +300,7 @@ func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.File
 		return nil, fmt.Errorf("failed to check storage quota: %w", err)
 	}
 	
-	if stats.Used + fileHeader.Size > s.storageLimit {
+	if stats.TotalUsed+fileHeader.Size > s.storageLimit {
 		return nil, fmt.Errorf("storage quota exceeded")
 	}
 

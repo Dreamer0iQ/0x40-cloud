@@ -56,6 +56,10 @@ type StorageConfig struct {
 	MaxUploadSize int64
 }
 
+type AuthConfig struct {
+	DisableRegistration bool
+}
+
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: .env file not found, using environment variables")
@@ -111,7 +115,9 @@ func getEnvAsInt(key string, defaultValue int) int {
 	if valueStr != "" {
 		if value, err := strconv.Atoi(valueStr); err == nil {
 			return value
-			return defaultValue
+		}
+	}
+	return defaultValue
 }
 
 func getEnvAsBool(key string, defaultValue bool) bool {
@@ -120,9 +126,6 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 		if value, err := strconv.ParseBool(valueStr); err == nil {
 			return value
 		}
-	}
-	return defaultValue
-}
 	}
 	return defaultValue
 }
