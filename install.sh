@@ -17,8 +17,8 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Define URLs (Replace these with your actual repo URL when releasing)
-REPO_RAW_URL="https://raw.githubusercontent.com/bhop_dynasty/0x40-cloud/master"
+# Define URLs
+REPO_RAW_URL="https://raw.githubusercontent.com/Dreamer0iQ/0x40-cloud/main"
 
 # 1. Download docker-compose.yml if not exists
 if [ ! -f "docker-compose.yml" ]; then
@@ -65,14 +65,14 @@ else
    # Since I can't push to dockerhub, I will instructing the script to try to build from a temp dir if source is missing?
    # User said "sshnik downloads docker container". So implies `docker pull`.
    
-   # IMPORTANT: Since I cannot push to DockerHub, I will assume the image name is `bhop_dynasty/0x40-management:latest`
+   # IMPORTANT: Since I cannot push to DockerHub, I will assume the image name is `dreamer0iq/0x40-management:latest`
    # But since it doesn't exist, I'll add a fallback to build from a temporary clone for this demo.
    
    echo "Pulling management tool..."
-   if ! docker pull bhop_dynasty/0x40-management:latest; then
+   if ! docker pull dreamer0iq/0x40-management:latest; then
         echo -e "${RED}Could not pull image. Cloning source to build locally...${NC}"
-        git clone https://github.com/bhop_dynasty/0x40-cloud.git /tmp/0x40-cloud-temp
-        docker build -t bhop_dynasty/0x40-management:latest /tmp/0x40-cloud-temp/management
+        git clone https://github.com/Dreamer0iQ/0x40-cloud.git /tmp/0x40-cloud-temp
+        docker build -t dreamer0iq/0x40-management:latest /tmp/0x40-cloud-temp/management
         rm -rf /tmp/0x40-cloud-temp
    fi
 fi
@@ -83,6 +83,6 @@ fi
 docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$(pwd):/app/workdir" \
-    bhop_dynasty/0x40-management:latest
+    dreamer0iq/0x40-management:latest
 
 echo -e "${GREEN}Done.${NC}"
