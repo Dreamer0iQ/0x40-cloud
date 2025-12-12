@@ -48,7 +48,7 @@ func main() {
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
-	fileService, err := services.NewFileService(fileRepo, starredRepo, starredFolderRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey, cfg.Storage.Limit)
+	fileService, err := services.NewFileService(fileRepo, starredRepo, starredFolderRepo, cfg.Storage.Path, cfg.Storage.EncryptionKey, cfg.Storage.Limit, cfg.Storage.MaxUploadSize)
 	if err != nil {
 		log.Fatalf("Failed to initialize file service: %v", err)
 	}

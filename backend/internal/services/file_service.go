@@ -27,9 +27,10 @@ type FileService struct {
 	storageDir        string
 	encryptionKey     []byte // 32 bytes для AES-256
 	storageLimit      int64
+	maxUploadSize     int64
 }
 
-func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, starredFolderRepo *repositories.StarredFolderRepository, storageDir string, encryptionKey string, storageLimit int64) (*FileService, error) {
+func NewFileService(fileRepo *repositories.FileRepository, starredRepo *repositories.StarredFileRepository, starredFolderRepo *repositories.StarredFolderRepository, storageDir string, encryptionKey string, storageLimit int64, maxUploadSize int64) (*FileService, error) {
 	// Убеждаемся, что ключ имеет правильную длину (32 байта для AES-256)
 	key := []byte(encryptionKey)
 	if len(key) != 32 {
@@ -48,6 +49,7 @@ func NewFileService(fileRepo *repositories.FileRepository, starredRepo *reposito
 		storageDir:        storageDir,
 		encryptionKey:     key,
 		storageLimit:      storageLimit,
+		maxUploadSize:     maxUploadSize,
 	}, nil
 }
 
@@ -288,6 +290,19 @@ func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.File
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
+
+	if fileHeader.Size > s.maxUploadSize {
+		return nil, fmt.Errorf("file too large: max size is %d bytes", s.maxUploadSize)
+	}
+	
+	stats, err := s.GetStorageStats(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check storage quota: %w", err)
+	}
+	
+	if stats.Used + fileHeader.Size > s.storageLimit {
+		return nil, fmt.Errorf("storage quota exceeded")
+	}
 
 	// Вычисляем SHA256 хеш
 	sha256Hash, err := s.calculateSHA256(file)

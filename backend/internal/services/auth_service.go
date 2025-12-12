@@ -21,13 +21,13 @@ const (
 
 type AuthService struct {
 	userRepo *repositories.UserRepository
-	cfg      *config.Config
+	Config   *config.Config
 }
 
 func NewAuthService(userRepo *repositories.UserRepository, cfg *config.Config) *AuthService {
 	return &AuthService{
 		userRepo: userRepo,
-		cfg:      cfg,
+		Config:   cfg,
 	}
 }
 
@@ -110,7 +110,7 @@ func (s *AuthService) GetUserByID(id uint) (*models.User, error) {
 }
 
 func (s *AuthService) generateToken(user *models.User) (string, error) {
-	duration, err := time.ParseDuration(s.cfg.JWT.Expiration)
+	duration, err := time.ParseDuration(s.Config.JWT.Expiration)
 	if err != nil {
 		duration = 24 * time.Hour
 	}
@@ -124,7 +124,7 @@ func (s *AuthService) generateToken(user *models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JWT.Secret))
+	return token.SignedString([]byte(s.Config.JWT.Secret))
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
@@ -132,7 +132,7 @@ func (s *AuthService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}
-		return []byte(s.cfg.JWT.Secret), nil
+		return []byte(s.Config.JWT.Secret), nil
 	})
 
 	if err != nil {

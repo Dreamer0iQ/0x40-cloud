@@ -44,6 +44,12 @@ func getValidationError(err error) string {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
+	// Check if registration is disabled
+	if h.authService.Config.Auth.DisableRegistration {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Registration is disabled"})
+		return
+	}
+
 	var req models.RegisterRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -16,6 +16,7 @@ type Config struct {
 	JWT      JWTConfig
 	CORS     CORSConfig
 	Storage  StorageConfig
+	Auth     AuthConfig
 }
 
 type ServerConfig struct {
@@ -52,6 +53,7 @@ type StorageConfig struct {
 	Path          string
 	EncryptionKey string
 	Limit         int64
+	MaxUploadSize int64
 }
 
 func Load() *Config {
@@ -83,12 +85,16 @@ func Load() *Config {
 			Path:          getEnv("STORAGE_PATH", "./storage"),
 			EncryptionKey: getEnv("ENCRYPTION_KEY", "12345678901234567890123456789012"), // ДОЛЖЕН БЫТЬ 32 байта!
 			Limit:         int64(getEnvAsInt("STORAGE_LIMIT_BYTES", 10*1024*1024*1024)),        // 10 GB default
+			MaxUploadSize: int64(getEnvAsInt("MAX_UPLOAD_SIZE", 1*1024*1024*1024)),          // 1 GB default
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
 			Port:     getEnv("REDIS_PORT", "6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 0),
+		},
+		Auth: AuthConfig{
+			DisableRegistration: getEnvAsBool("DISABLE_REGISTRATION", false),
 		},
 	}
 }
@@ -105,7 +111,18 @@ func getEnvAsInt(key string, defaultValue int) int {
 	if valueStr != "" {
 		if value, err := strconv.Atoi(valueStr); err == nil {
 			return value
+			return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	valueStr := os.Getenv(key)
+	if valueStr != "" {
+		if value, err := strconv.ParseBool(valueStr); err == nil {
+			return value
 		}
+	}
+	return defaultValue
+}
 	}
 	return defaultValue
 }
