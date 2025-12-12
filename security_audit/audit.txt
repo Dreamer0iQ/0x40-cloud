@@ -1,0 +1,35 @@
+Security Audit Report
+Date: 2025-12-12 Target: 0x40-cloud Tools Used: Nuclei, Gosec, Trivy, npm audit
+
+Executive Summary
+The audit revealed critical and high severity vulnerabilities. The most significant risks include:
+
+Path Traversal: Potential arbitrary file read/write in the backend file service.
+Weak Secrets: Hardcoded, weak credentials and secrets in configuration.
+Vulnerable Dependencies: severe issues in frontend libraries (xlsx).
+Container Security: Application running as root in Docker.
+Findings
+1. High Severity
+Vulnerable Dependency (Frontend): xlsx (CVE-2023-30533) - Prototype Pollution.
+Integer Overflow (Backend): file_service.go:620-621 converting uint64 to int64 for disk stats.
+Container as Root: Dockerfile does not specify a USER, running as root (Container Escape risk).
+Hardcoded Secrets: 
+.env
+ contains weak/default passwords (e.g. DB_PASSWORD=bhop_dynasty, JWT_SECRET=your-secret-key...).
+2. Medium Severity
+Path Traversal Risk: file_service.go uses os.Open and os.Create with concatenated paths without sufficient sanitization verification (G304).
+Insecure Permissions: Folders created with 0755 permissions (G301).
+Docker Tag: Using alpine:latest instead of a pinned version.
+3. Low Severity / Informational
+Unhandled Errors: f.Close() errors unhandled in file_service.go.
+Detailed Analysis
+Backend (Gosec Analysis)
+Path Traversal (G304): Detected in internal/services/file_service.go at lines 90, 158, 255. The application takes paths and opens them directly. If input validation is weak, this allows reading/writing arbitrary system files.
+Integer Overflow (G115): stats.PhysicalTotal line 620. If disk size exceeds int64 max, negative values may be reported.
+Frontend (npm audit)
+xlsx: Has a high Severity prototype pollution vulnerability. Recommend updating or sanitizing input heavily if used for parsing untrusted Excel files.
+js-yaml: Moderate severity prototype pollution.
+Infrastructure (Trivy)
+Dockerfile: Missing USER instruction.
+Remediation: Add RUN adduser -D appuser && USER appuser to Dockerfile.
+Dependencies: golang.org/x/crypto has SSH-related CVEs (CVE-2025-47914). Ensure the app does not expose SSH-like services.
