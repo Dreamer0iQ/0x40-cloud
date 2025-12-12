@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -19,6 +18,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        
+      - name: Prepare Reg Name
+        run: |
+          echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
@@ -33,7 +36,7 @@ jobs:
           context: .
           file: ./backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/backend:latest
+          tags: ghcr.io/${{ env.IMAGE_NAME }}/backend:latest
 
       - name: Build and push Management TUI
         uses: docker/build-push-action@v4
@@ -41,4 +44,4 @@ jobs:
           context: ./management
           file: ./management/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/management:latest
+          tags: ghcr.io/${{ env.IMAGE_NAME }}/management:latest
