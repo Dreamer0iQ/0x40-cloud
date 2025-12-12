@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -83,17 +84,27 @@ func (s *FileService) getStoragePath(sha256Hash string) string {
 
 // encryptFile шифрует содержимое файла используя AES-256-GCM
 func (s *FileService) encryptFile(src multipart.File, dstPath string) (int64, error) {
-	// Создаем директории если их нет
-	if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+	// Проверяем путь на безопасность
+	safePath, err := s.sanitizePath(dstPath)
+	if err != nil {
+		return 0, fmt.Errorf("invalid destination path: %w", err)
+	}
+
+	// Создаем директории если их нет (используем безопасные права 0750)
+	if err := os.MkdirAll(filepath.Dir(safePath), 0750); err != nil {
 		return 0, fmt.Errorf("failed to create directories: %w", err)
 	}
 
 	// Создаем файл для записи зашифрованных данных
-	dstFile, err := os.Create(dstPath)
+	dstFile, err := os.Create(safePath)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() {
+		if closeErr := dstFile.Close(); closeErr != nil {
+			fmt.Printf("Warning: failed to close file: %v\n", closeErr)
+		}
+	}()
 
 	// Создаем AES cipher
 	block, err := aes.NewCipher(s.encryptionKey)
@@ -156,12 +167,22 @@ func (s *FileService) encryptFile(src multipart.File, dstPath string) (int64, er
 
 // decryptFile расшифровывает файл
 func (s *FileService) decryptFile(srcPath string, dst io.Writer) error {
+	// Проверяем путь на безопасность
+	safePath, err := s.sanitizePath(srcPath)
+	if err != nil {
+		return fmt.Errorf("invalid source path: %w", err)
+	}
+
 	// Открываем зашифрованный файл
-	srcFile, err := os.Open(srcPath)
+	srcFile, err := os.Open(safePath)
 	if err != nil {
 		return fmt.Errorf("failed to open encrypted file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() {
+		if closeErr := srcFile.Close(); closeErr != nil {
+			fmt.Printf("Warning: failed to close file: %v\n", closeErr)
+		}
+	}()
 
 	// Создаем AES cipher
 	block, err := aes.NewCipher(s.encryptionKey)
@@ -251,14 +272,16 @@ func (s *FileService) CreateFolder(userID uint, virtualPath, folderName string) 
 
 	// Если файл еще не создан (никто не создавал пустых папок/файлов), создаем его
 	if _, err := os.Stat(storagePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(filepath.Dir(storagePath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(storagePath), 0750); err != nil {
 			return nil, fmt.Errorf("failed to create directories: %w", err)
 		}
 		f, err := os.Create(storagePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create marker file: %w", err)
 		}
-		f.Close()
+		if closeErr := f.Close(); closeErr != nil {
+			return nil, fmt.Errorf("failed to close marker file: %w", closeErr)
+		}
 	}
 
 	fileID := uuid.New()
@@ -280,7 +303,8 @@ func (s *FileService) CreateFolder(userID uint, virtualPath, folderName string) 
 		return nil, fmt.Errorf("failed to create folder record: %w", err)
 	}
 
-	return fileModel, nil}
+	return fileModel, nil
+}
 
 // UploadFileWithPath загружает и шифрует файл с указанием виртуального пути
 func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.FileHeader, virtualPath, folderName string) (*models.File, error) {
@@ -294,12 +318,12 @@ func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.File
 	if fileHeader.Size > s.maxUploadSize {
 		return nil, fmt.Errorf("file too large: max size is %d bytes", s.maxUploadSize)
 	}
-	
+
 	stats, err := s.GetStorageStats(userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check storage quota: %w", err)
 	}
-	
+
 	if stats.TotalUsed+fileHeader.Size > s.storageLimit {
 		return nil, fmt.Errorf("storage quota exceeded")
 	}
@@ -423,6 +447,87 @@ func (s *FileService) GetFilesByPath(userID uint, virtualPath string) ([]models.
 	return s.EnrichFilesWithStarred(files, userID)
 }
 
+// GetImages получает список файлов-изображений пользователя
+func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
+	// Список MIME-типов изображений
+	imageMimeTypes := map[string]bool{
+		"image/jpeg":    true,
+		"image/jpg":     true,
+		"image/png":     true,
+		"image/gif":     true,
+		"image/webp":    true,
+		"image/bmp":     true,
+		"image/svg+xml": true,
+		"image/heic":    true,
+		"image/heif":    true,
+	}
+	
+	// Получаем все файлы пользователя
+	allFiles, err := s.fileRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Фильтруем только изображения
+	images := make([]models.File, 0)
+	for _, file := range allFiles {
+		if imageMimeTypes[file.MimeType] {
+			images = append(images, file)
+			if limit > 0 && len(images) >= limit {
+				break
+			}
+		}
+	}
+	
+	return s.EnrichFilesWithStarred(images, userID)
+}
+
+// DownloadFolderAsZip создает ZIP архив папки и записывает в writer
+func (s *FileService) DownloadFolderAsZip(virtualPath string, userID uint, w io.Writer) error {
+	// Нормализуем путь
+	if virtualPath == "" {
+		virtualPath = "/"
+	}
+	if !strings.HasSuffix(virtualPath, "/") {
+		virtualPath += "/"
+	}
+
+	// Получаем все файлы в папке
+	files, err := s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+	if err != nil {
+		return fmt.Errorf("failed to get files: %w", err)
+	}
+
+	// Создаем ZIP writer
+	zipWriter := zip.NewWriter(w)
+	defer func() {
+		if closeErr := zipWriter.Close(); closeErr != nil {
+			fmt.Printf("Warning: failed to close zip writer: %v\n", closeErr)
+		}
+	}()
+
+	// Добавляем каждый файл в архив
+	for _, file := range files {
+		// Пропускаем папки
+		if file.MimeType == "inode/directory" {
+			continue
+		}
+
+		// Создаем entry в ZIP
+		zipFile, err := zipWriter.Create(file.OriginalName)
+		if err != nil {
+			return fmt.Errorf("failed to create zip entry: %w", err)
+		}
+
+		// Расшифровываем и записываем файл в ZIP
+		if err := s.decryptFile(file.Path, zipFile); err != nil {
+			return fmt.Errorf("failed to decrypt file %s: %w", file.OriginalName, err)
+		}
+	}
+
+	return nil
+}
+
 // DeleteFile удаляет файл
 func (s *FileService) DeleteFile(fileID uuid.UUID, userID uint) error {
 	_, err := s.GetFile(fileID, userID)
@@ -433,6 +538,46 @@ func (s *FileService) DeleteFile(fileID uuid.UUID, userID uint) error {
 	// Удаляем запись из БД (soft delete)
 	if err := s.fileRepo.Delete(fileID); err != nil {
 		return fmt.Errorf("failed to delete file metadata: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteFolder удаляет папку и все файлы в ней
+func (s *FileService) DeleteFolder(virtualPath string, userID uint) error {
+	// Нормализуем путь
+	if virtualPath == "" {
+		return fmt.Errorf("cannot delete root folder")
+	}
+	if !strings.HasSuffix(virtualPath, "/") {
+		virtualPath += "/"
+	}
+
+	// Получаем все файлы в папке
+	files, err := s.fileRepo.FindByUserIDAndPath(userID, virtualPath)
+	if err != nil {
+		return fmt.Errorf("failed to get files: %w", err)
+	}
+
+	// Удаляем все файлы
+	for _, file := range files {
+		if err := s.DeleteFile(file.ID, userID); err != nil {
+			return fmt.Errorf("failed to delete file %s: %w", file.OriginalName, err)
+		}
+	}
+
+	// Находим и удаляем саму папку (если она существует как маркер)
+	folderMarkers, err := s.fileRepo.FindByUserIDAndPath(userID, filepath.Dir(virtualPath)+"/")
+	if err == nil {
+		folderName := filepath.Base(strings.TrimSuffix(virtualPath, "/"))
+		for _, folder := range folderMarkers {
+			if folder.OriginalName == folderName && folder.MimeType == "inode/directory" {
+				if err := s.DeleteFile(folder.ID, userID); err != nil {
+					return fmt.Errorf("failed to delete folder marker: %w", err)
+				}
+				break
+			}
+		}
 	}
 
 	return nil
@@ -499,111 +644,6 @@ func (s *FileService) DeleteFilePermanently(fileID uuid.UUID, userID uint) error
 	return nil
 }
 
-
-
-// GetImages получает последние изображения пользователя
-func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
-	files, err := s.fileRepo.FindImagesByUserID(userID, limit)
-	if err != nil {
-		return nil, err
-	}
-	return s.EnrichFilesWithStarred(files, userID)
-}
-
-// DownloadFolderAsZip скачивает папку как ZIP архив
-func (s *FileService) DownloadFolderAsZip(virtualPath string, userID uint, dst io.Writer) error {
-	// Находим все файлы в папке рекурсивно
-	files, err := s.fileRepo.FindAllRecursively(userID, virtualPath)
-	if err != nil {
-		return fmt.Errorf("failed to find files: %w", err)
-	}
-
-	if len(files) == 0 {
-		return fmt.Errorf("no files found in this folder")
-	}
-
-	// Создаем zip writer
-	zipWriter := zip.NewWriter(dst)
-	defer zipWriter.Close()
-
-	// Ensure prefix ends with /
-	prefix := virtualPath
-	if prefix != "/" && len(prefix) > 0 && prefix[len(prefix)-1] != '/' {
-		prefix += "/"
-	}
-
-	for _, file := range files {
-		// Пропускаем виртуальные папки (если они вдруг попадут в выборку)
-		if file.MimeType == "inode/directory" {
-			continue
-		}
-
-		// Вычисляем относительный путь в архиве
-		// Например: virtualPath="/foo/", file="/foo/bar/baz.txt" -> "bar/baz.txt"
-		relPath := ""
-		if strings.HasPrefix(file.VirtualPath, prefix) {
-			relPath = file.VirtualPath[len(prefix):]
-		}
-		
-		zipPath := filepath.Join(relPath, file.OriginalName)
-
-		// Создаем entry в архиве
-		w, err := zipWriter.Create(zipPath)
-		if err != nil {
-			return fmt.Errorf("failed to create zip entry for %s: %w", zipPath, err)
-		}
-
-		// Расшифровываем файл прямо в zip writer
-		if err := s.decryptFile(file.Path, w); err != nil {
-			// Логируем ошибку, но продолжаем? Или прерываем?
-			// Лучше прервать, чтобы пользователь узнал об ошибке
-			return fmt.Errorf("failed to decrypt file %s: %w", file.OriginalName, err)
-		}
-	}
-
-	return nil
-}
-
-// DeleteFolder удаляет папку и все её содержимое
-func (s *FileService) DeleteFolder(virtualPath string, userID uint) error {
-	// Находим все файлы в папке рекурсивно
-	files, err := s.fileRepo.FindAllRecursively(userID, virtualPath)
-	if err != nil {
-		return fmt.Errorf("failed to find files: %w", err)
-	}
-
-	// Удаляем каждый файл (soft delete)
-	for _, file := range files {
-		// Если это виртуальная папка (inode/directory), удаляем её тоже через репозиторий файлов
-		// Метод Delete в репозитории должен работать по ID
-		// Если у папки есть ID (она есть в БД), удаляем по ID.
-		// Если это просто сгруппированные файлы, то они удалятся, когда мы удалим все файлы.
-		
-		// В текущей реализации папки могут быть как отдельные записи (inode/directory), так и просто виртуальные.
-		// FindAllRecursively должен возвращать и те и другие, если они есть в БД.
-		
-		if err := s.fileRepo.Delete(file.ID); err != nil {
-			// Логируем ошибку, но продолжаем удаление других файлов?
-			// Или прерываем? Для консистентности лучше попробовать удалить всё что можно.
-			fmt.Printf("Failed to delete file %s during folder deletion: %v\n", file.ID, err)
-		}
-	}
-	
-	// Если папка была в starred, удаляем её оттуда
-	// Убедимся, что путь заканчивается на /
-	folderPath := virtualPath
-	if len(folderPath) > 0 && folderPath[len(folderPath)-1] != '/' {
-		folderPath += "/"
-	}
-	
-	if err := s.starredFolderRepo.Delete(userID, folderPath); err != nil {
-		// Игнорируем ошибку, если папки не было в избранном
-		_ = err
-	}
-
-	return nil
-}
-
 // getFileSystemUsage returns total and free bytes for the storage filesystem
 func (s *FileService) getFileSystemUsage() (total, free uint64, err error) {
 	var stat syscall.Statfs_t
@@ -627,14 +667,51 @@ func (s *FileService) GetStorageStats(userID uint) (*models.StorageStats, error)
 	// Add logical limit
 	stats.Limit = s.storageLimit
 
-	// Add physical stats
+	// Add physical stats with overflow protection
 	total, free, err := s.getFileSystemUsage()
 	if err != nil {
 		fmt.Printf("Warning: failed to get disk usage: %v\n", err)
 	} else {
-		stats.PhysicalTotal = int64(total)
-		stats.PhysicalFree = int64(free)
+		// Защита от integer overflow: проверяем что значения не превышают int64 max
+		const maxInt64 = int64(^uint64(0) >> 1)
+		
+		if total > uint64(maxInt64) {
+			stats.PhysicalTotal = maxInt64
+		} else {
+			stats.PhysicalTotal = int64(total)
+		}
+		
+		if free > uint64(maxInt64) {
+			stats.PhysicalFree = maxInt64
+		} else {
+			stats.PhysicalFree = int64(free)
+		}
 	}
 
 	return stats, nil
+}
+
+// sanitizePath проверяет и очищает путь для предотвращения path traversal атак
+func (s *FileService) sanitizePath(path string) (string, error) {
+	// Очищаем путь
+	cleanPath := filepath.Clean(path)
+
+	// Получаем абсолютный путь
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve absolute path: %w", err)
+	}
+
+	// Получаем абсолютный путь storage директории
+	absStorageDir, err := filepath.Abs(s.storageDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve storage directory: %w", err)
+	}
+
+	// Проверяем, что путь находится внутри storage директории
+	if !strings.HasPrefix(absPath, absStorageDir) {
+		return "", errors.New("path traversal attempt detected")
+	}
+
+	return absPath, nil
 }

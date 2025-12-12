@@ -6,3 +6,6 @@ backend/.DS_Store
 .DS_Store
 .DS_Store
 management/management
+backend/server
+backend/server
+SECURITY.md

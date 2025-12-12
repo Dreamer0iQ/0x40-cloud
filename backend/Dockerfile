@@ -20,17 +20,23 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-w -s' -o server ./cmd/server
 
 # Stage 2: Runtime
-FROM alpine:latest
+FROM alpine:3.21
 
 RUN apk --no-cache add ca-certificates tzdata wget
 
 WORKDIR /app
 
+# Создаем непривилегированного пользователя
+RUN adduser -D -u 1000 appuser
+
 # Копируем бинарник из builder
 COPY --from=builder /app/server .
 
 # Создаём директорию для хранилища
-RUN mkdir -p /app/storage
+RUN mkdir -p /app/storage && chown -R appuser:appuser /app
+
+# Переключаемся на непривилегированного пользователя
+USER appuser
 
 # Expose порт
 EXPOSE 8080

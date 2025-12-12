@@ -1,0 +1,35 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+/bin/
+/server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Storage directory
+/storage/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
