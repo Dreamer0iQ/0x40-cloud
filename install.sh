@@ -57,15 +57,15 @@ if [ ! -f ".env" ]; then
     echo -e "${GREEN}.env created.${NC}"
 fi
 
-# 4. Build Management TUI
-echo -e "${BLUE}Building Management Tool...${NC}"
-if [ ! -f "management/Dockerfile" ]; then
-    echo -e "${RED}Error: Management tool sources not found in repository.${NC}"
-    exit 1
-fi
+# 4. Run Management TUI
+echo -e "${GREEN}Starting Management Interface...${NC}"
+# Use pre-built image from GHCR
+docker run -it --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v "$(pwd):/app/workdir" \
+    ghcr.io/dreamer0iq/0x40-cloud/management:latest
 
-# Build the management image locally from source
-docker build -t 0x40-management ./management > /dev/null
+echo -e "${GREEN}Done.${NC}"
 
 # 5. Create Global Command (0x40-cloud)
 echo -e "${BLUE}Creating global command '0x40-cloud'...${NC}"
@@ -75,7 +75,7 @@ cat << EOF | sudo tee /usr/local/bin/0x40-cloud > /dev/null
 docker run -it --rm \\
     -v /var/run/docker.sock:/var/run/docker.sock \\
     -v "$INSTALL_PATH:/app/workdir" \\
-    0x40-management
+    ghcr.io/dreamer0iq/0x40-cloud/management:latest
 EOF
 sudo chmod +x /usr/local/bin/0x40-cloud
 echo -e "${GREEN}Command '0x40-cloud' installed!${NC}"

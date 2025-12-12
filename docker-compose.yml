@@ -41,9 +41,7 @@ services:
 
   # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/dreamer0iq/0x40-cloud/backend:latest
     container_name: 0x40-backend
     restart: unless-stopped
     ports:
