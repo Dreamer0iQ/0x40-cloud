@@ -11,10 +11,26 @@ echo -e "${BLUE}=== 0x40 Cloud Installer ===${NC}"
 
 # Check for Docker
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Error: Docker is not installed.${NC}"
-    echo "Please install Docker and Docker Compose before running this script."
-    echo "Visit: https://docs.docker.com/get-docker/"
-    exit 1
+    echo -e "${BLUE}Docker is not installed. Installing...${NC}"
+    if command -v curl &> /dev/null; then
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+        rm get-docker.sh
+    elif command -v wget &> /dev/null; then
+        wget -qO- https://get.docker.com | sh
+    else
+        echo -e "${RED}Error: neither curl nor wget found. Cannot install Docker.${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}Docker installed successfully.${NC}"
+    
+    # Attempt to start Docker service if systemd is present
+    if command -v systemctl &> /dev/null; then
+        echo "Starting Docker service..."
+        sudo systemctl start docker || true
+        sudo systemctl enable docker || true
+    fi
 fi
 
 # Define URLs
