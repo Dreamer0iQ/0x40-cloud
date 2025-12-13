@@ -19,11 +19,6 @@ type model struct {
 }
 
 func main() {
-	// Program starts here
-	// This is a placeholder for the actual TUI implementation
-	// We will use 'huh' for forms and 'bubbletea' for the main menu loop if needed, 
-	// or just a simple loop with 'huh' selects.
-	
 	// Check/Load .env
 	loadEnv()
 
@@ -34,6 +29,7 @@ func main() {
 			huh.NewGroup(
 				huh.NewSelect[string]().
 					Title("0x40 Cloud Management").
+					Description("Use ↑/↓ and Enter to select.").
 					Options(
 						huh.NewOption("Status & Info", "status"),
 						huh.NewOption("Toggle Registration", "registration"),
@@ -45,7 +41,7 @@ func main() {
 					).
 					Value(&action),
 			),
-		)
+		).WithTheme(huh.ThemeDracula())
 
 		err := form.Run()
 		if err != nil {
@@ -98,16 +94,11 @@ func showStatus() {
     diskLimit := os.Getenv("STORAGE_LIMIT_BYTES")
     regDisabled := os.Getenv("DISABLE_REGISTRATION")
     
-    // 3. Disk Usage (of the volume) - tricky from inside container without mounting volume root,
-    // but we can try 'docker system df -v' if socket is mounted, or just show the limit.
-    // For now, let's show what we know.
-    
     fmt.Println("\n=== STATUS ===")
     fmt.Printf("Backend Status: %s\n", status)
     fmt.Printf("Port: %s\n", port)
     fmt.Printf("Registration Disabled: %s\n", regDisabled)
     fmt.Printf("Storage Limit: %s bytes\n", diskLimit)
-    // TODO: Get Admin Info (maybe query DB container? or just show instructions)
 }
 
 func toggleRegistration() {
@@ -126,14 +117,14 @@ func generateSecrets() {
     huh.NewForm(
         huh.NewGroup(
             huh.NewConfirm().
-                Title("Are you sure? This will invalidate all existing sessions.").
+                Title("Are you sure?").
+                Description("This will invalidate all existing sessions (Left/Right to toggle).").
                 Value(&confirm),
         ),
-    ).Run()
+    ).WithTheme(huh.ThemeDracula()).Run()
     
     if confirm {
         // Generate random strings (simplified for this snippet)
-        // In real Go code we'd use crypto/rand
         newJwt := "new-secret-" + "random123" // TODO: Implement proper random
         newEnc := "12345678901234567890123456789012" // TODO: proper random 32 chars
         
@@ -152,7 +143,7 @@ func changePort() {
                 Title("Enter new port").
                 Value(&newPort),
         ),
-    ).Run()
+    ).WithTheme(huh.ThemeDracula()).Run()
     
     if newPort != "" {
         updateEnv("PORT", newPort)
@@ -176,7 +167,7 @@ func editQuotas() {
                 Description("Default: 1GB = 1073741824").
                 Value(&maxUpload),
         ),
-    ).Run()
+    ).WithTheme(huh.ThemeDracula()).Run()
     
     if storageLimit != "" {
         updateEnv("STORAGE_LIMIT_BYTES", storageLimit)
@@ -214,17 +205,11 @@ func toggleCloud() {
 
 
 func updateEnv(key, value string) {
-    // Basic sed implementation for demo. In real production code, parse and rewrite cleanly.
-    // Assuming .env is simpler key=value
-    // os.Setenv for current process
     os.Setenv(key, value)
     
-    // Write to file
     // We use sed to replace the line. 
-    // This is fragile but works for the assumed simple .env structure.
     cmd := exec.Command("sed", "-i", fmt.Sprintf("s/^%s=.*/%s=%s/", key, key, value), "/app/workdir/.env")
     if err := cmd.Run(); err != nil {
-        // If sed fails (maybe key doesn't exist), append it
          f, _ := os.OpenFile("/app/workdir/.env", os.O_APPEND|os.O_WRONLY, 0600)
          defer f.Close()
          f.WriteString(fmt.Sprintf("\n%s=%s", key, value))
