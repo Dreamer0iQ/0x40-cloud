@@ -122,8 +122,8 @@ FINAL_IMAGE=""
 
 # If pull failed, build locally
 if [ -z "$FINAL_IMAGE" ]; then
-    print_warn "Could not pull image from registry. Building locally..."
-    print_info "Building management interface from source..."
+    # print_warn "Could not pull image from registry. Building locally..."
+    print_info "Building management interface from source (ensuring latest version)..."
     
     # Build the management image locally
     if docker build -t "$LOCAL_IMAGE_NAME" ./management/; then
