@@ -100,24 +100,16 @@ print_header "Preparing Management Interface"
 IMAGE_NAME="ghcr.io/dreamer0iq/0x40-cloud/management:latest"
 
 # Try to pull, but if it fails, build locally
-if docker pull "$IMAGE_NAME" 2>/dev/null; then
+if docker pull "$IMAGE_NAME"; then
     print_success "Management image pulled successfully."
 else
-    print_warn "Could not pull image (likely private). Building from source..."
-    # We are in 0x40-cloud directory
-    if [ -d "management" ]; then
-        cd management
-        if docker build -t "$IMAGE_NAME" .; then
-            print_success "Management image built successfully."
-            cd ..
-        else
-            print_error "Failed to build management image."
-            exit 1
-        fi
-    else
-        print_error "Management directory missing!"
-        exit 1
-    fi
+    print_error "Could not pull image '$IMAGE_NAME'."
+    print_warn "Troubleshooting:"
+    echo -e "   1. Check if the image has finished building in GitHub Actions."
+    echo -e "   2. Ensure the GitHub Package is set to PUBLIC."
+    echo -e "   3. Try clearing old credentials: '${BOLD}docker logout ghcr.io${NC}' then try again."
+    print_error "Exiting because local build is disabled."
+    exit 1
 fi
 
 # 5. Create Global Command (0x40-cloud)
@@ -129,7 +121,7 @@ cat << EOF | sudo tee /usr/local/bin/0x40-cloud > /dev/null
 docker run -it --rm \\
     -v /var/run/docker.sock:/var/run/docker.sock \\
     -v "$INSTALL_PATH:/app/workdir" \\
-    ghcr.io/dreamer0iq/0x40-cloud/management:latest
+    $IMAGE_NAME
 EOF
 sudo chmod +x /usr/local/bin/0x40-cloud
 print_success "Command '0x40-cloud' installed!"
@@ -139,11 +131,11 @@ print_header "Launch"
 print_info "Starting Management Interface..."
 echo -e "${CYAN}Use the arrow keys to navigate the menu.${NC}"
 
-# Run directly to avoid path issues immediately after install
+# Run directly
 docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$(pwd):/app/workdir" \
-    ghcr.io/dreamer0iq/0x40-cloud/management:latest
+    $IMAGE_NAME
 
 print_header "Installation Complete"
 print_success "You can run '0x40-cloud' anytime to manage your cloud."
