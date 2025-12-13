@@ -194,12 +194,29 @@ func toggleCloud() {
     
     if status == "running" {
         fmt.Println("Stopping cloud...")
-        exec.Command("docker", "compose", "-f", "/app/workdir/docker-compose.yml", "stop").Run()
+        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose down")
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+        cmd.Run()
         fmt.Println("Stopped.")
     } else {
-         fmt.Println("Starting cloud...")
-        exec.Command("docker", "compose", "-f", "/app/workdir/docker-compose.yml", "start").Run()
-        fmt.Println("Started.")
+        fmt.Println("Starting cloud (this may take a few minutes)...")
+        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose pull")
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+        cmd.Run()
+        
+        fmt.Println("Launching services...")
+        cmd = exec.Command("sh", "-c", "cd /app/workdir && docker compose up -d --build")
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+        if err := cmd.Run(); err != nil {
+            fmt.Printf("Error: %v\n", err)
+        } else {
+            fmt.Println("✓ Cloud started successfully!")
+            fmt.Println("  Frontend: http://localhost:3000")
+            fmt.Println("  Backend:  http://localhost:8080")
+        }
     }
 }
 
@@ -218,7 +235,7 @@ func updateEnv(key, value string) {
 
 func restartContainer() {
     // Trigger docker compose up -d to apply changes
-    cmd := exec.Command("docker", "compose", "-f", "/app/workdir/docker-compose.yml", "up", "-d")
+    cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose up -d")
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
     cmd.Run()
