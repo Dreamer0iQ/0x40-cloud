@@ -37,6 +37,10 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: ghcr.io/${{ env.IMAGE_NAME }}/backend:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.description=0x40 Cloud Backend
+            org.opencontainers.image.licenses=MIT
 
       - name: Build and push Management TUI
         uses: docker/build-push-action@v4
@@ -45,3 +49,7 @@ jobs:
           file: ./management/Dockerfile
           push: true
           tags: ghcr.io/${{ env.IMAGE_NAME }}/management:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.description=0x40 Cloud Management Interface
+            org.opencontainers.image.licenses=MIT

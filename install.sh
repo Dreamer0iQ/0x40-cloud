@@ -97,19 +97,42 @@ fi
 
 # 4. Preparing Management Image
 print_header "Preparing Management Interface"
-IMAGE_NAME="ghcr.io/dreamer0iq/0x40-cloud/management:latest"
 
-# Try to pull, but if it fails, build locally
-if docker pull "$IMAGE_NAME"; then
-    print_success "Management image pulled successfully."
-else
-    print_error "Could not pull image '$IMAGE_NAME'."
-    print_warn "Troubleshooting:"
-    echo -e "   1. Check if the image has finished building in GitHub Actions."
-    echo -e "   2. Ensure the GitHub Package is set to PUBLIC."
-    echo -e "   3. Try clearing old credentials: '${BOLD}docker logout ghcr.io${NC}' then try again."
-    print_error "Exiting because local build is disabled."
-    exit 1
+# Try multiple possible image names (case sensitivity matters in ghcr.io)
+IMAGE_NAMES=(
+    "ghcr.io/dreamer0iq/0x40-cloud/management:latest"
+    "ghcr.io/Dreamer0iQ/0x40-cloud/management:latest"
+)
+LOCAL_IMAGE_NAME="0x40-cloud-management:latest"
+FINAL_IMAGE=""
+
+# Try to pull from registry with different name variations
+for IMAGE_NAME in "${IMAGE_NAMES[@]}"; do
+    print_info "Trying to pull $IMAGE_NAME..."
+    if docker pull "$IMAGE_NAME" 2>/dev/null; then
+        print_success "Management image pulled successfully from registry."
+        FINAL_IMAGE="$IMAGE_NAME"
+        break
+    fi
+done
+
+# If pull failed, build locally
+if [ -z "$FINAL_IMAGE" ]; then
+    print_warn "Could not pull image from registry. Building locally..."
+    print_info "Building management interface from source..."
+    
+    # Build the management image locally
+    if docker build -t "$LOCAL_IMAGE_NAME" ./management/; then
+        print_success "Management image built successfully."
+        FINAL_IMAGE="$LOCAL_IMAGE_NAME"
+    else
+        print_error "Failed to build management image."
+        print_warn "Troubleshooting:"
+        echo -e "   1. Check if Docker daemon is running"
+        echo -e "   2. Ensure you have enough disk space"
+        echo -e "   3. Check management/Dockerfile for errors"
+        exit 1
+    fi
 fi
 
 # 5. Create Global Command (0x40-cloud)
@@ -121,7 +144,7 @@ cat << EOF | sudo tee /usr/local/bin/0x40-cloud > /dev/null
 docker run -it --rm \\
     -v /var/run/docker.sock:/var/run/docker.sock \\
     -v "$INSTALL_PATH:/app/workdir" \\
-    $IMAGE_NAME
+    $FINAL_IMAGE
 EOF
 sudo chmod +x /usr/local/bin/0x40-cloud
 print_success "Command '0x40-cloud' installed!"
@@ -135,7 +158,7 @@ echo -e "${CYAN}Use the arrow keys to navigate the menu.${NC}"
 docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$(pwd):/app/workdir" \
-    $IMAGE_NAME
+    $FINAL_IMAGE
 
 print_header "Installation Complete"
 print_success "You can run '0x40-cloud' anytime to manage your cloud."
