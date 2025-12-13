@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="frontend/logo/logo_full_color.svg" width="120" alt="0x40 Cloud Logo" />
-  <h1>0x40 Cloud</h1>
+  <img src="frontend/logo/logo_0x40.png" width="120" alt="0x40 Cloud Logo" />
   <p>Secure, private, and personal cloud storage solution.</p>
 </div>
 
@@ -11,7 +10,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Nginx](https://img.shields.io/badge/Nginx-Latest-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
-[![Python](https://img.shields.io/badge/Python-Security-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 
 </div>
 
