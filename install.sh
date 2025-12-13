@@ -162,6 +162,9 @@ docker run -it --rm \
     -v "$(pwd):/app/workdir" \
     $FINAL_IMAGE
 
+# Get Public IP
+PUBLIC_IP=$(curl -s https://api.ipify.org || echo "YOUR_SERVER_IP")
+
 print_header "Installation Complete"
 print_success "You can run '0x40-cloud' anytime to manage your cloud."
 echo ""
@@ -172,6 +175,6 @@ echo -e "  ${BOLD}docker compose up -d${NC} - Start all services manually"
 echo -e "  ${BOLD}docker ps${NC}            - Check running containers"
 echo ""
 echo -e "${CYAN}Access your cloud:${NC}"
-echo -e "  Frontend: ${BOLD}http://localhost:3000${NC}"
-echo -e "  Backend:  ${BOLD}http://localhost:8080${NC}"
+echo -e "  Frontend: ${BOLD}http://$PUBLIC_IP:3000${NC}"
+echo -e "  Backend:  ${BOLD}http://$PUBLIC_IP:8080${NC}"
 echo ""

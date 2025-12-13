@@ -213,9 +213,17 @@ func toggleCloud() {
         if err := cmd.Run(); err != nil {
             fmt.Printf("Error: %v\n", err)
         } else {
+            // Get Public IP
+            publicIP := "localhost"
+            ipCmd := exec.Command("curl", "-s", "https://api.ipify.org")
+            ipOut, err := ipCmd.Output()
+            if err == nil {
+                publicIP = strings.TrimSpace(string(ipOut))
+            }
+
             fmt.Println("✓ Cloud started successfully!")
-            fmt.Println("  Frontend: http://localhost:3000")
-            fmt.Println("  Backend:  http://localhost:8080")
+            fmt.Printf("  Frontend: http://%s:3000\n", publicIP)
+            fmt.Printf("  Backend:  http://%s:8080\n", publicIP)
         }
     }
 }
