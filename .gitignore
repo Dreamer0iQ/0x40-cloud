@@ -15,3 +15,4 @@ security_audit/audit_setup.sh
 security_audit/audit_results.txt
 security_audit/__pycache__/pentest_suite.cpython-314.pyc
 audit_results.txt
+frontend/logo/logo_full_color.svg
