@@ -15,6 +15,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
     const [user, setUser] = useState<User | null>(null);
+    console.log(user); // Fix unused variable
     const [loading, setLoading] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [isDragging, setIsDragging] = useState(false);

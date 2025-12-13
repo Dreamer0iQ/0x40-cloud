@@ -194,20 +194,20 @@ func toggleCloud() {
     
     if status == "running" {
         fmt.Println("Stopping cloud...")
-        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker-compose down")
+        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose down")
         cmd.Stdout = os.Stdout
         cmd.Stderr = os.Stderr
         cmd.Run()
         fmt.Println("Stopped.")
     } else {
         fmt.Println("Starting cloud (this may take a few minutes)...")
-        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker-compose pull")
+        cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose pull")
         cmd.Stdout = os.Stdout
         cmd.Stderr = os.Stderr
         cmd.Run()
         
         fmt.Println("Launching services...")
-        cmd = exec.Command("sh", "-c", "cd /app/workdir && docker-compose up -d --build")
+        cmd = exec.Command("sh", "-c", "cd /app/workdir && docker compose up -d --build")
         cmd.Stdout = os.Stdout
         cmd.Stderr = os.Stderr
         if err := cmd.Run(); err != nil {
@@ -235,7 +235,7 @@ func updateEnv(key, value string) {
 
 func restartContainer() {
     // Trigger docker compose up -d to apply changes
-    cmd := exec.Command("sh", "-c", "cd /app/workdir && docker-compose up -d")
+    cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose up -d")
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
     cmd.Run()

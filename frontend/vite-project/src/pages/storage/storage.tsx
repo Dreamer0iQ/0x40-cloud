@@ -17,6 +17,7 @@ interface StorageProps {
 
 export default function Storage({ onLogout }: StorageProps) {
     const [user, setUser] = useState<User | null>(null);
+    console.log(user); // Fix unused variable
     const [loading, setLoading] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [searchParams] = useSearchParams();

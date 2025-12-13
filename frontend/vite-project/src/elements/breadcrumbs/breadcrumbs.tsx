@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { getPathParts, normalizePath } from '../../utils/pathUtils';
+import { getPathParts } from '../../utils/pathUtils';
 import styles from './breadcrumbs.module.scss';
 import { fileService } from '../../services/fileService';
 import type { FileMetadata } from '../../types/file';

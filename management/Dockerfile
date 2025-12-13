@@ -16,7 +16,7 @@ FROM alpine:latest
 
 WORKDIR /app
 # Install docker cli to control sibling container
-RUN apk add --no-cache docker-cli
+RUN apk add --no-cache docker-cli docker-cli-compose
 
 COPY --from=builder /app/management .
 

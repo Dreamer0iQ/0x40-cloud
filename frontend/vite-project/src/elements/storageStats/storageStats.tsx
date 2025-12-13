@@ -20,27 +20,27 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
         videos: 0,
         other: 0
     });
-    
+
     const diskPercentage = ((diskUsed / diskTotal) * 100);
     const totalFiles = Object.values(filesByType).reduce((sum, count) => sum + count, 0);
-    
+
     // Анимация при загрузке
     useEffect(() => {
         const duration = 1500; // 1.5 секунды
         const steps = 60; // 60 кадров
         const interval = duration / steps;
         let currentStep = 0;
-        
+
         const timer = setInterval(() => {
             currentStep++;
             const progress = currentStep / steps;
-            
+
             // Easing функция для плавности (ease-out)
             const easeProgress = 1 - Math.pow(1 - progress, 3);
-            
+
             // Анимация диска
             setAnimatedDiskPercentage(diskPercentage * easeProgress);
-            
+
             // Анимация файлов
             setAnimatedFiles({
                 documents: Math.round(filesByType.documents * easeProgress),
@@ -48,7 +48,7 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
                 videos: Math.round(filesByType.videos * easeProgress),
                 other: Math.round(filesByType.other * easeProgress)
             });
-            
+
             if (currentStep >= steps) {
                 clearInterval(timer);
                 // Устанавливаем точные значения в конце
@@ -56,23 +56,23 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
                 setAnimatedFiles(filesByType);
             }
         }, interval);
-        
+
         return () => clearInterval(timer);
     }, [diskUsed, diskTotal, filesByType, diskPercentage]);
-    
+
     const animatedTotalFiles = Object.values(animatedFiles).reduce((sum, count) => sum + count, 0);
-    
+
     // Расчет процентов для каждого типа файлов
     const getFileTypePercentage = (count: number) => {
         if (totalFiles === 0) return 0;
         return (count / totalFiles) * 100;
     };
-    
+
     const documentsPercentage = getFileTypePercentage(animatedFiles.documents);
     const imagesPercentage = getFileTypePercentage(animatedFiles.images);
     const videosPercentage = getFileTypePercentage(animatedFiles.videos);
-    const otherPercentage = getFileTypePercentage(animatedFiles.other);
-    
+
+
     // Угол для SVG круга (270 градусов = 75% круга)
     const getStrokeDasharray = (percentage: number) => {
         const circumference = 2 * Math.PI * 45; // радиус 45
@@ -161,7 +161,7 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
                 </svg>
                 <div className={styles.percentage}>{animatedTotalFiles}</div>
                 <div className={styles.label}>Total Files</div>
-                
+
                 {/* <div className={styles.legend}>
                     <div className={styles.legendItem}>
                         <span className={styles.legendDot} style={{ backgroundColor: '#3B82F6' }}></span>
