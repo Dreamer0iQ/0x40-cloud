@@ -77,6 +77,12 @@ services:
       - ENCRYPTION_KEY=12345678901234567890123456789012
     volumes:
       - ./backend/storage:/app/storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
