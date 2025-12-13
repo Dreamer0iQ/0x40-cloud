@@ -90,6 +90,9 @@ if [ ! -f ".env" ]; then
     echo "STORAGE_LIMIT_BYTES=10737418240" >> .env
     echo "MAX_UPLOAD_SIZE=1073741824" >> .env
     echo "DISABLE_REGISTRATION=false" >> .env
+    # Get Public IP for CORS
+    PUBLIC_IP=$(curl -s https://api.ipify.org || echo "localhost")
+    echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://$PUBLIC_IP:3000" >> .env
     print_success ".env file created with defaults."
 else
     print_info ".env file already exists. Skipping."
