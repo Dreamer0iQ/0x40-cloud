@@ -110,15 +110,15 @@ LOCAL_IMAGE_NAME="0x40-cloud-management:latest"
 FINAL_IMAGE=""
 
 # Try to pull from registry with different name variations
-# Try to pull from registry (Commented out to ensure we use the latest local code with fixes)
-# for IMAGE_NAME in "${IMAGE_NAMES[@]}"; do
-#     print_info "Trying to pull $IMAGE_NAME..."
-#     if docker pull "$IMAGE_NAME" 2>/dev/null; then
-#         print_success "Management image pulled successfully from registry."
-#         FINAL_IMAGE="$IMAGE_NAME"
-#         break
-#     fi
-# done
+# Try to pull from registry
+for IMAGE_NAME in "${IMAGE_NAMES[@]}"; do
+    print_info "Trying to pull $IMAGE_NAME..."
+    if docker pull "$IMAGE_NAME" 2>/dev/null; then
+        print_success "Management image pulled successfully from registry."
+        FINAL_IMAGE="$IMAGE_NAME"
+        break
+    fi
+done
 
 # If pull failed, build locally
 if [ -z "$FINAL_IMAGE" ]; then
