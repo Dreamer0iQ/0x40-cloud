@@ -31,7 +31,7 @@ function print_error() {
 # ASCII Logo
 echo -e "${BOLD}${CYAN}
   __  _  _  ___   __         ___  __     __   _  _  ____ 
- /  \( \/ )/ _ \ /  \  ___  / __)(  )   /  \ / )( \(    \
+ /  \( \/ )/ _ \ /  \  ___  / __)(  )   /  \ / )( \(    \\
 (  0 ))  ((__  ((  0 )(___)( (__ / (_/\(  O )) \/ ( ) D (
  \__/(_/\_) (__/ \__/       \___)\____/ \__/ \____/(____/
                               
@@ -93,6 +93,31 @@ if [ ! -f ".env" ]; then
     print_success ".env file created with defaults."
 else
     print_info ".env file already exists. Skipping."
+fi
+
+# 4. Preparing Management Image
+print_header "Preparing Management Interface"
+IMAGE_NAME="ghcr.io/dreamer0iq/0x40-cloud/management:latest"
+
+# Try to pull, but if it fails, build locally
+if docker pull "$IMAGE_NAME" 2>/dev/null; then
+    print_success "Management image pulled successfully."
+else
+    print_warn "Could not pull image (likely private). Building from source..."
+    # We are in 0x40-cloud directory
+    if [ -d "management" ]; then
+        cd management
+        if docker build -t "$IMAGE_NAME" .; then
+            print_success "Management image built successfully."
+            cd ..
+        else
+            print_error "Failed to build management image."
+            exit 1
+        fi
+    else
+        print_error "Management directory missing!"
+        exit 1
+    fi
 fi
 
 # 5. Create Global Command (0x40-cloud)
