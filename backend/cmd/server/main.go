@@ -60,12 +60,14 @@ func main() {
 	fileHandler := handlers.NewFileHandler(fileService, activityService)
 	shareHandler := handlers.NewShareHandler(shareService)
 
-	r.GET("/health", func(c *gin.Context) {
+	healthHandler := func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
 			"message": "0x40 cloud API is running",
 		})
-	})
+	}
+	r.GET("/health", healthHandler)
+	r.HEAD("/health", healthHandler)
 
 	api := r.Group("/api")
 	{

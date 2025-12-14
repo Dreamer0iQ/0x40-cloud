@@ -83,7 +83,7 @@ func Load() *Config {
 			Expiration: getEnv("JWT_EXPIRATION", "24h"),
 		},
 		CORS: CORSConfig{
-			AllowedOrigins: strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:5173"), ","),
+			AllowedOrigins: strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:3000"), ","),
 		},
 	Storage: StorageConfig{
 			Path:          getEnv("STORAGE_PATH", "./storage"),
