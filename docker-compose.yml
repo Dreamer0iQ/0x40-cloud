@@ -41,16 +41,14 @@ services:
 
   # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/dreamer0iq/0x40-cloud/backend:latest
     container_name: 0x40-backend
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       # Server
-      - ENV=development
+      - ENV=production
       - PORT=8080
       
       # Database
@@ -72,7 +70,6 @@ services:
       - JWT_EXPIRATION=24h
       
       # CORS
-      # CORS
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
       
       # Auth
@@ -93,9 +90,7 @@ services:
 
   # Frontend
   frontend:
-    build:
-      context: ./frontend/vite-project
-      dockerfile: Dockerfile
+    image: ghcr.io/dreamer0iq/0x40-cloud/frontend:latest
     container_name: 0x40-frontend
     restart: unless-stopped
     ports:

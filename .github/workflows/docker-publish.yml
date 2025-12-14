@@ -53,3 +53,15 @@ jobs:
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.description=0x40 Cloud Management Interface
             org.opencontainers.image.licenses=MIT
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend/vite-project
+          file: ./frontend/vite-project/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.IMAGE_NAME }}/frontend:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.description=0x40 Cloud Frontend
+            org.opencontainers.image.licenses=MIT
