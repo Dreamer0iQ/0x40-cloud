@@ -69,8 +69,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
       - JWT_EXPIRATION=24h
       
-      # CORS - используем внешние порты!
-      - ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000},http://localhost:5173,http://localhost:5174
+      # CORS - используем переменную из .env с публичным IP!
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
       
       # Auth
       - DISABLE_REGISTRATION=${DISABLE_REGISTRATION:-false}
