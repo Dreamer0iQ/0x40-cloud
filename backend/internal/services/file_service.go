@@ -19,6 +19,7 @@ import (
 	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type FileService struct {
@@ -336,6 +337,10 @@ func (s *FileService) UploadFileWithPath(userID uint, fileHeader *multipart.File
 
 	// Проверяем, существует ли уже файл с таким хешем для этого пользователя
 	existingFile, err := s.fileRepo.FindBySHA256AndUserID(sha256Hash, userID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		// Произошла реальная ошибка, а не просто "файл не найден"
+		return nil, fmt.Errorf("failed to check existing file: %w", err)
+	}
 	if err == nil && existingFile != nil {
 		// Файл уже существует, возвращаем его
 		return existingFile, nil
