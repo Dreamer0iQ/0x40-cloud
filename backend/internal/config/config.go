@@ -65,6 +65,21 @@ func Load() *Config {
 		log.Println("Warning: .env file not found, using environment variables")
 	}
 
+	// Validate critical security settings
+	jwtSecret := getEnv("JWT_SECRET", "")
+	if jwtSecret == "" || jwtSecret == "change-this-secret-key" {
+		log.Fatal("CRITICAL: JWT_SECRET must be set to a strong random value (not default). Generate with: openssl rand -base64 32")
+	}
+
+	encryptionKey := getEnv("ENCRYPTION_KEY", "")
+	if encryptionKey == "" || encryptionKey == "12345678901234567890123456789012" {
+		log.Fatal("CRITICAL: ENCRYPTION_KEY must be set to a strong 32-byte random value (not default). Generate with: openssl rand -hex 32")
+	}
+
+	if len(encryptionKey) != 32 {
+		log.Fatalf("CRITICAL: ENCRYPTION_KEY must be exactly 32 bytes, got %d bytes", len(encryptionKey))
+	}
+
 	return &Config{
 		Server: ServerConfig{
 			Port: getEnv("PORT", "8080"),
@@ -79,7 +94,7 @@ func Load() *Config {
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
-			Secret:     getEnv("JWT_SECRET", "change-this-secret-key"),
+			Secret:     jwtSecret,
 			Expiration: getEnv("JWT_EXPIRATION", "24h"),
 		},
 		CORS: CORSConfig{
@@ -87,7 +102,7 @@ func Load() *Config {
 		},
 	Storage: StorageConfig{
 			Path:          getEnv("STORAGE_PATH", "./storage"),
-			EncryptionKey: getEnv("ENCRYPTION_KEY", "12345678901234567890123456789012"), // ДОЛЖЕН БЫТЬ 32 байта!
+			EncryptionKey: encryptionKey,
 			Limit:         int64(getEnvAsInt("STORAGE_LIMIT_BYTES", 10*1024*1024*1024)),        // 10 GB default
 			MaxUploadSize: int64(getEnvAsInt("MAX_UPLOAD_SIZE", 1*1024*1024*1024)),          // 1 GB default
 		},

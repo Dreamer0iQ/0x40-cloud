@@ -63,7 +63,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, response)
+	// Set JWT token as httpOnly cookie
+	h.setAuthCookie(c, response.Token)
+
+	// Return user info without token
+	c.JSON(http.StatusCreated, gin.H{
+		"user": response.User,
+	})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -80,7 +86,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Set JWT token as httpOnly cookie
+	h.setAuthCookie(c, response.Token)
+
+	// Return user info without token
+	c.JSON(http.StatusOK, gin.H{
+		"user": response.User,
+	})
 }
 
 func (h *AuthHandler) GetMe(c *gin.Context) {
@@ -97,4 +109,37 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user.ToResponse())
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// Clear the auth cookie
+	c.SetCookie(
+		"auth_token",
+		"",
+		-1, // expires immediately
+		"/",
+		"",
+		h.authService.Config.Server.Env == "production", // secure only in production
+		true, // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+}
+
+// setAuthCookie sets the JWT token as an httpOnly cookie
+func (h *AuthHandler) setAuthCookie(c *gin.Context, token string) {
+	maxAge := 24 * 60 * 60 // 24 hours in seconds
+	
+	c.SetCookie(
+		"auth_token",          // name
+		token,                 // value
+		maxAge,                // max age in seconds
+		"/",                   // path
+		"",                    // domain (empty = current domain)
+		h.authService.Config.Server.Env == "production", // secure (HTTPS only) in production
+		true,                  // httpOnly (not accessible via JavaScript)
+	)
+
+	// Also set SameSite policy
+	c.Writer.Header().Add("Set-Cookie", "SameSite=Strict")
 }

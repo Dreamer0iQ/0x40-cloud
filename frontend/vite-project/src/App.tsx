@@ -12,8 +12,8 @@ import { authService } from './services/authService';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     window.location.href = '/login';
   };
 
@@ -66,11 +66,8 @@ function App() {
 
           <Route path="/share/:token" element={<DownloadPage />} />
 
-          <Route path="/" element={
-            authService.isAuthenticated()
-              ? <Navigate to="/dashboard" replace />
-              : <Navigate to="/login" replace />
-          } />
+          {/* Root redirect - всегда идем на dashboard, ProtectedRoute перенаправит на login если не авторизован */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* 404 - редирект на главную */}
           <Route path="*" element={<Navigate to="/" replace />} />

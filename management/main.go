@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
@@ -132,26 +135,106 @@ func toggleRegistration() {
 }
 
 func generateSecrets() {
+    fmt.Println("\n⚠️  WARNING: Generating new secrets will:")
+    fmt.Println("   • Invalidate all existing user sessions (users will need to log in again)")
+    fmt.Println("   • Make OLD files unreadable if ENCRYPTION_KEY changes")
+    fmt.Println("   • This action cannot be undone!")
+    fmt.Println()
+    
+    // Show current secrets (partially masked)
+    currentJWT := os.Getenv("JWT_SECRET")
+    currentEnc := os.Getenv("ENCRYPTION_KEY")
+    
+    if currentJWT != "" {
+        masked := maskSecret(currentJWT)
+        fmt.Printf("Current JWT_SECRET: %s\n", masked)
+    }
+    if currentEnc != "" {
+        masked := maskSecret(currentEnc)
+        fmt.Printf("Current ENCRYPTION_KEY: %s\n", masked)
+    }
+    fmt.Println()
+    
     confirm := false
     huh.NewForm(
         huh.NewGroup(
             huh.NewConfirm().
-                Title("Are you sure?").
-                Description("This will invalidate all existing sessions (Left/Right to toggle).").
+                Title("Generate new secrets?").
+                Description("Use Left/Right arrows to toggle, Enter to confirm").
                 Value(&confirm),
         ),
     ).WithTheme(huh.ThemeDracula()).Run()
     
     if confirm {
-        // Generate random strings (simplified for this snippet)
-        newJwt := "new-secret-" + "random123" // TODO: Implement proper random
-        newEnc := "12345678901234567890123456789012" // TODO: proper random 32 chars
+        fmt.Println("\n🔐 Generating cryptographically secure secrets...")
         
+        // Generate JWT_SECRET (32 bytes base64 = ~43 chars)
+        newJwt, err := generateJWTSecret()
+        if err != nil {
+            fmt.Printf("❌ Error generating JWT secret: %v\n", err)
+            return
+        }
+        
+        // Generate ENCRYPTION_KEY (exactly 32 bytes for AES-256)
+        newEnc, err := generateEncryptionKey()
+        if err != nil {
+            fmt.Printf("❌ Error generating encryption key: %v\n", err)
+            return
+        }
+        
+        fmt.Println("\n✅ New secrets generated:")
+        fmt.Printf("   JWT_SECRET: %s\n", maskSecret(newJwt))
+        fmt.Printf("   ENCRYPTION_KEY: %s\n", maskSecret(newEnc))
+        fmt.Println()
+        
+        // Update .env file
         updateEnv("JWT_SECRET", newJwt)
         updateEnv("ENCRYPTION_KEY", newEnc)
-        fmt.Println("Secrets generated. Restarting...")
+        
+        fmt.Println("💾 Secrets saved to .env file")
+        fmt.Println("🔄 Restarting services to apply changes...")
         restartContainer()
+        fmt.Println("\n✓ Done! All users will need to log in again.")
+    } else {
+        fmt.Println("Cancelled. No changes made.")
     }
+}
+
+// generateJWTSecret creates a cryptographically secure JWT secret
+func generateJWTSecret() (string, error) {
+    // Generate 32 random bytes
+    bytes := make([]byte, 32)
+    if _, err := rand.Read(bytes); err != nil {
+        return "", err
+    }
+    // Encode as base64 for better readability
+    return base64.StdEncoding.EncodeToString(bytes), nil
+}
+
+// generateEncryptionKey creates exactly 32 bytes for AES-256
+func generateEncryptionKey() (string, error) {
+    // Generate exactly 32 random bytes
+    bytes := make([]byte, 32)
+    if _, err := rand.Read(bytes); err != nil {
+        return "", err
+    }
+    // Encode as hex (32 bytes = 64 hex chars, but we only need first 32 for the key)
+    // Actually, we return the raw bytes as a 32-char string
+    // Wait, the backend expects a 32-byte string, so let's use hex but take only 16 bytes
+    // No, let's generate 16 bytes and hex encode them = 32 chars
+    bytes16 := make([]byte, 16)
+    if _, err := rand.Read(bytes16); err != nil {
+        return "", err
+    }
+    return hex.EncodeToString(bytes16), nil
+}
+
+// maskSecret masks most of a secret, showing only first and last few chars
+func maskSecret(secret string) string {
+    if len(secret) <= 8 {
+        return "****"
+    }
+    return secret[:4] + "..." + secret[len(secret)-4:]
 }
 
 func changePort() {

@@ -81,22 +81,60 @@ fi
 
 # 3. Setup .env if missing
 print_header "Configuration"
+
+# Function to generate secure JWT secret
+generate_jwt_secret() {
+    openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64
+}
+
+# Function to generate 32-byte encryption key
+generate_encryption_key() {
+    openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | xxd -p -c 32
+}
+
 if [ ! -f ".env" ]; then
-    print_info "Creating default .env..."
+    print_info "Creating .env with secure secrets..."
+    
+    # Generate secure secrets
+    JWT_SECRET=$(generate_jwt_secret)
+    ENCRYPTION_KEY=$(generate_encryption_key)
+    
+    # Mask secrets for display (show first and last 4 chars)
+    JWT_MASKED="${JWT_SECRET:0:4}...${JWT_SECRET: -4}"
+    ENC_MASKED="${ENCRYPTION_KEY:0:4}...${ENCRYPTION_KEY: -4}"
+    
     echo "BACKEND_PORT=8080" > .env
     echo "FRONTEND_PORT=3000" >> .env
     echo "DB_PASSWORD=postgres" >> .env
-    echo "JWT_SECRET=change-this-secret-key" >> .env
-    echo "ENCRYPTION_KEY=12345678901234567890123456789012" >> .env
+    echo "JWT_SECRET=$JWT_SECRET" >> .env
+    echo "ENCRYPTION_KEY=$ENCRYPTION_KEY" >> .env
     echo "STORAGE_LIMIT_BYTES=10737418240" >> .env
     echo "MAX_UPLOAD_SIZE=1073741824" >> .env
     echo "DISABLE_REGISTRATION=false" >> .env
+    
     # Get Public IP for CORS
     PUBLIC_IP=$(curl -s https://api.ipify.org || echo "localhost")
     echo "ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://$PUBLIC_IP:3000" >> .env
-    print_success ".env file created with defaults."
+    
+    print_success ".env file created with secure random secrets!"
+    print_warn "⚠️  IMPORTANT: Keep these secrets safe!"
+    print_info "   JWT_SECRET: $JWT_MASKED"
+    print_info "   ENCRYPTION_KEY: $ENC_MASKED"
+    print_info "   Full secrets saved in: $(pwd)/.env"
+    echo ""
 else
-    print_info ".env file already exists. Skipping."
+    print_info ".env file already exists."
+    
+    # Check if secrets are default/weak
+    if grep -q "change-this-secret-key" .env 2>/dev/null; then
+        print_error "⚠️  SECURITY WARNING: Default JWT_SECRET detected!"
+        print_warn "Run '0x40-cloud' and select 'Generate New Secrets' to fix this."
+    fi
+    
+    if grep -q "12345678901234567890123456789012" .env 2>/dev/null; then
+        print_error "⚠️  SECURITY WARNING: Default ENCRYPTION_KEY detected!"
+        print_warn "Run '0x40-cloud' and select 'Generate New Secrets' to fix this."
+    fi
 fi
 
 # 3.5 Fix Storage Permissions
@@ -187,13 +225,23 @@ PUBLIC_IP=$(curl -s https://api.ipify.org || echo "YOUR_SERVER_IP")
 print_header "Installation Complete"
 print_success "You can run '0x40-cloud' anytime to manage your cloud."
 echo ""
+print_warn "🔒 SECURITY CHECKLIST:"
+echo -e "  ${BOLD}✓${NC} Secure secrets generated automatically"
+echo -e "  ${YELLOW}⚠${NC}  Configure HTTPS before exposing to internet (see SECURITY_SETUP.md)"
+echo -e "  ${YELLOW}⚠${NC}  Change database password in production"
+echo -e "  ${YELLOW}⚠${NC}  Backup your .env file securely"
+echo ""
 echo -e "${CYAN}Quick commands:${NC}"
 echo -e "  ${BOLD}0x40-cloud${NC}           - Open management interface"
-echo -e "  ${BOLD}cd ~/0x40-cloud${NC}      - Go to project directory"
+echo -e "  ${BOLD}cd 0x40-cloud${NC}        - Go to project directory"
 echo -e "  ${BOLD}docker compose up -d${NC} - Start all services manually"
-echo -e "  ${BOLD}docker ps${NC}            - Check running containers"
+echo -e "  ${BOLD}docker compose logs -f${NC} - View logs"
 echo ""
 echo -e "${CYAN}Access your cloud:${NC}"
 echo -e "  Frontend: ${BOLD}http://$PUBLIC_IP:3000${NC}"
 echo -e "  Backend:  ${BOLD}http://$PUBLIC_IP:8080${NC}"
+echo ""
+echo -e "${CYAN}Documentation:${NC}"
+echo -e "  Security: ${BOLD}cat 0x40-cloud/SECURITY_AUDIT_REPORT.md${NC}"
+echo -e "  Setup:    ${BOLD}cat 0x40-cloud/SECURITY_SETUP.md${NC}"
 echo ""

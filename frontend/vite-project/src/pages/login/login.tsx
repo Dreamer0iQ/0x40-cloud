@@ -50,15 +50,15 @@ export default function Login({ onAuthSuccess }: LoginProps) {
                     return;
                 }
 
-                const response = await authService.register({
+                const user = await authService.register({
                     username,
                     email,
                     password,
                     confirm_password: confirmPassword,
                 });
 
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('user', JSON.stringify(response.user));
+                // Cache user info in sessionStorage
+                authService.setCachedUser(user);
 
                 onAuthSuccess();
             } else {
@@ -69,13 +69,13 @@ export default function Login({ onAuthSuccess }: LoginProps) {
                     return;
                 }
 
-                const response = await authService.login({
+                const user = await authService.login({
                     email,
                     password,
                 });
 
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('user', JSON.stringify(response.user));
+                // Cache user info in sessionStorage
+                authService.setCachedUser(user);
 
                 onAuthSuccess();
             }

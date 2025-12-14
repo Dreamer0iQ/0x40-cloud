@@ -40,7 +40,7 @@ export default function Storage({ onLogout }: StorageProps) {
             setUser(userData);
         } catch (error) {
             console.error('Failed to load user:', error);
-            authService.logout();
+            await authService.logout();
             onLogout();
         } finally {
             setLoading(false);

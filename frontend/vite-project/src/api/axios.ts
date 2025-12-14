@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -8,21 +8,8 @@ export const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Important: send cookies with requests
 });
-
-// Интерсептор для добавления токена к запросам
-api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error: AxiosError) => {
-        return Promise.reject(error);
-    }
-);
 
 // Интерсептор для обработки ошибок
 api.interceptors.response.use(
@@ -30,9 +17,8 @@ api.interceptors.response.use(
     (error: AxiosError) => {
         if (error.response?.status === 401) {
             // Токен истек или невалиден
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Не делаем редирект здесь - пусть компоненты сами обрабатывают 401
+            sessionStorage.removeItem('user');
+            // Редирект на страницу логина можно сделать в компонентах
         }
         return Promise.reject(error);
     }

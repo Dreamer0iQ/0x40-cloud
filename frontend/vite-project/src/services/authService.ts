@@ -1,17 +1,17 @@
 import api from '../api/axios';
-import type { RegisterRequest, LoginRequest, AuthResponse, User } from '../types/auth';
+import type { RegisterRequest, LoginRequest, User } from '../types/auth';
 
 export const authService = {
     // Регистрация
-    register: async (data: RegisterRequest): Promise<AuthResponse> => {
-        const response = await api.post<AuthResponse>('/auth/register', data);
-        return response.data;
+    register: async (data: RegisterRequest): Promise<User> => {
+        const response = await api.post<{ user: User }>('/auth/register', data);
+        return response.data.user;
     },
 
     // Вход
-    login: async (data: LoginRequest): Promise<AuthResponse> => {
-        const response = await api.post<AuthResponse>('/auth/login', data);
-        return response.data;
+    login: async (data: LoginRequest): Promise<User> => {
+        const response = await api.post<{ user: User }>('/auth/login', data);
+        return response.data.user;
     },
 
     // Получить текущего пользователя
@@ -21,24 +21,40 @@ export const authService = {
     },
 
     // Выход
-    logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    logout: async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+        // Clear any cached user data
+        sessionStorage.removeItem('user');
     },
 
-    // Проверка авторизации
-    isAuthenticated: (): boolean => {
-        return !!localStorage.getItem('token');
+    // Проверка авторизации - теперь нужно проверять через запрос к серверу
+    isAuthenticated: async (): Promise<boolean> => {
+        try {
+            await authService.getMe();
+            return true;
+        } catch {
+            return false;
+        }
     },
 
-    // Получить токен
-    getToken: (): string | null => {
-        return localStorage.getItem('token');
-    },
-
-    // Получить пользователя из localStorage
-    getUser: (): User | null => {
-        const userStr = localStorage.getItem('user');
+    // Получить пользователя из sessionStorage (кеш)
+    getCachedUser: (): User | null => {
+        const userStr = sessionStorage.getItem('user');
         return userStr ? JSON.parse(userStr) : null;
     },
+
+    // Сохранить пользователя в sessionStorage (кеш)
+    setCachedUser: (user: User) => {
+        sessionStorage.setItem('user', JSON.stringify(user));
+    },
+
+    // Очистить кеш пользователя
+    clearCachedUser: () => {
+        sessionStorage.removeItem('user');
+    },
 };
+

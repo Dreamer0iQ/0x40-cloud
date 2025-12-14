@@ -60,7 +60,7 @@ export default function Images() {
             await authService.getMe();
         } catch (error) {
             console.error('Failed to load user:', error);
-            authService.logout();
+            await authService.logout();
             window.location.href = '/login';
         } finally {
             setLoading(false);

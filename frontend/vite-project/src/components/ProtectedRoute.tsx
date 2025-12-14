@@ -13,19 +13,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     useEffect(() => {
         const checkAuth = async () => {
-            if (!authService.isAuthenticated()) {
-                setIsAuthenticated(false);
-                setIsChecking(false);
-                return;
-            }
-
             try {
-                // Проверяем валидность токена
+                // Проверяем валидность токена через запрос к серверу
                 await authService.getMe();
                 setIsAuthenticated(true);
             } catch (error) {
-                // Токен невалиден
-                authService.logout();
+                // Токен невалиден или отсутствует
+                authService.clearCachedUser();
                 setIsAuthenticated(false);
             } finally {
                 setIsChecking(false);
