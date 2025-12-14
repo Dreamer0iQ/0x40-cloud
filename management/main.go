@@ -387,13 +387,42 @@ func toggleCloud() {
 func updateEnv(key, value string) {
     os.Setenv(key, value)
     
-    // We use sed to replace the line. 
-    cmd := exec.Command("sed", "-i", fmt.Sprintf("s/^%s=.*/%s=%s/", key, key, value), "/app/workdir/.env")
-    if err := cmd.Run(); err != nil {
-         f, _ := os.OpenFile("/app/workdir/.env", os.O_APPEND|os.O_WRONLY, 0600)
-         defer f.Close()
-         f.WriteString(fmt.Sprintf("\n%s=%s", key, value))
+    envPath := "/app/workdir/.env"
+    
+    // Read the entire file
+    content, err := os.ReadFile(envPath)
+    if err != nil {
+        // File doesn't exist, create it
+        os.WriteFile(envPath, []byte(fmt.Sprintf("%s=%s\n", key, value)), 0644)
+        return
     }
+    
+    lines := strings.Split(string(content), "\n")
+    found := false
+    newLines := make([]string, 0, len(lines))
+    
+    for _, line := range lines {
+        // Check if this line starts with our key
+        if strings.HasPrefix(line, key+"=") {
+            // Replace this line
+            newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
+            found = true
+        } else {
+            newLines = append(newLines, line)
+        }
+    }
+    
+    // If key wasn't found, add it at the end
+    if !found {
+        // Remove trailing empty lines and add our key
+        for len(newLines) > 0 && newLines[len(newLines)-1] == "" {
+            newLines = newLines[:len(newLines)-1]
+        }
+        newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
+    }
+    
+    // Write back
+    os.WriteFile(envPath, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
 }
 
 func restartContainer() {
