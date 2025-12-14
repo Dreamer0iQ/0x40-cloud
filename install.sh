@@ -100,16 +100,16 @@ fi
 
 # 3.5 Fix Storage Permissions
 print_header "Setting up Storage Permissions"
-STORAGE_DIR="$INSTALL_DIR/backend/storage"
+STORAGE_DIR="./backend/storage"
 if [ ! -d "$STORAGE_DIR" ]; then
     print_info "Creating storage directory..."
     mkdir -p "$STORAGE_DIR"
 fi
 print_info "Setting permissions for storage directory..."
 # Set ownership to 1000:1000 (appuser in container)
-chown -R 1000:1000 "$STORAGE_DIR" 2>/dev/null || true
+sudo chown -R 1000:1000 "$STORAGE_DIR" 2>/dev/null || chown -R 1000:1000 "$STORAGE_DIR" 2>/dev/null || true
 # Ensure it is writable
-chmod -R 755 "$STORAGE_DIR"
+chmod -R 777 "$STORAGE_DIR"
 print_success "Storage permissions configured."
 
 # 4. Preparing Management Image
