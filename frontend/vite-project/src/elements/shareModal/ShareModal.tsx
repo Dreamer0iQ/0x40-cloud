@@ -50,7 +50,19 @@ export default function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
 
     const copyToClipboard = () => {
         if (shareUrl) {
-            navigator.clipboard.writeText(shareUrl);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl);
+            } else {
+                // Fallback for HTTP (non-secure context)
+                const textArea = document.createElement('textarea');
+                textArea.value = shareUrl;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
             alert('Link copied!');
         }
     };

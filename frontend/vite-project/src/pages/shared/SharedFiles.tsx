@@ -40,7 +40,19 @@ export default function SharedFiles() {
 
     const copyLink = (token: string) => {
         const url = `${window.location.origin}/share/${token}`;
-        navigator.clipboard.writeText(url);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url);
+        } else {
+            // Fallback for HTTP (non-secure context)
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
         alert('Link copied to clipboard!');
     };
 
