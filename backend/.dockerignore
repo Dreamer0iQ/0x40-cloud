@@ -41,6 +41,7 @@ storage/*
 # Scripts
 scripts/
 *.sh
+!entrypoint.sh
 
 # Logs
 *.log
