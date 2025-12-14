@@ -426,7 +426,15 @@ func updateEnv(key, value string) {
 }
 
 func restartContainer() {
-    // Trigger docker compose up -d to apply changes
+    // Stop and remove old containers first to avoid conflicts
+    fmt.Println("Stopping existing containers...")
+    stopCmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose down --remove-orphans")
+    stopCmd.Stdout = os.Stdout
+    stopCmd.Stderr = os.Stderr
+    stopCmd.Run()
+    
+    // Start fresh
+    fmt.Println("Starting containers with new configuration...")
     cmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose up -d")
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
