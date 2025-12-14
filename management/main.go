@@ -426,12 +426,18 @@ func updateEnv(key, value string) {
 }
 
 func restartContainer() {
-    // Stop and remove old containers first to avoid conflicts
+    // Force remove containers by name to avoid conflicts from different project contexts
     fmt.Println("Stopping existing containers...")
-    stopCmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose down --remove-orphans")
+    
+    // First try normal docker compose down
+    stopCmd := exec.Command("sh", "-c", "cd /app/workdir && docker compose down --remove-orphans 2>/dev/null")
     stopCmd.Stdout = os.Stdout
     stopCmd.Stderr = os.Stderr
     stopCmd.Run()
+    
+    // Force remove specific containers if they exist (handles cross-project conflicts)
+    forceRemove := exec.Command("sh", "-c", "docker rm -f 0x40-redis 0x40-postgres 0x40-backend 0x40-frontend 2>/dev/null || true")
+    forceRemove.Run()
     
     // Start fresh
     fmt.Println("Starting containers with new configuration...")
