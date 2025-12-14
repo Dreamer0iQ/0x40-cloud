@@ -21,7 +21,8 @@
 vendor/
 
 # Storage directory
-/storage/
+/storage/*
+!/storage/.gitkeep
 
 # IDEs
 .idea/
