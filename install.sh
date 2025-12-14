@@ -83,7 +83,8 @@ fi
 print_header "Configuration"
 if [ ! -f ".env" ]; then
     print_info "Creating default .env..."
-    echo "PORT=8080" > .env
+    echo "BACKEND_PORT=8080" > .env
+    echo "FRONTEND_PORT=3000" >> .env
     echo "DB_PASSWORD=postgres" >> .env
     echo "JWT_SECRET=change-this-secret-key" >> .env
     echo "ENCRYPTION_KEY=12345678901234567890123456789012" >> .env

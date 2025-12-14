@@ -90,15 +90,34 @@ func showStatus() {
     }
     
     // 2. Read Env vars
-    port := os.Getenv("PORT")
+    backendPort := os.Getenv("BACKEND_PORT")
+    if backendPort == "" {
+        backendPort = "8080"
+    }
+    frontendPort := os.Getenv("FRONTEND_PORT")
+    if frontendPort == "" {
+        frontendPort = "3000"
+    }
     diskLimit := os.Getenv("STORAGE_LIMIT_BYTES")
     regDisabled := os.Getenv("DISABLE_REGISTRATION")
     
+    // 3. Get Public IP
+    publicIP := "localhost"
+    ipCmd := exec.Command("curl", "-s", "https://api.ipify.org")
+    ipOut, err := ipCmd.Output()
+    if err == nil {
+        publicIP = strings.TrimSpace(string(ipOut))
+    }
+    
     fmt.Println("\n=== STATUS ===")
     fmt.Printf("Backend Status: %s\n", status)
-    fmt.Printf("Port: %s\n", port)
+    fmt.Printf("Backend Port: %s\n", backendPort)
+    fmt.Printf("Frontend Port: %s\n", frontendPort)
     fmt.Printf("Registration Disabled: %s\n", regDisabled)
     fmt.Printf("Storage Limit: %s bytes\n", diskLimit)
+    fmt.Println("\n=== WEB ACCESS ===")
+    fmt.Printf("Frontend: http://%s:%s\n", publicIP, frontendPort)
+    fmt.Printf("Backend:  http://%s:%s\n", publicIP, backendPort)
 }
 
 func toggleRegistration() {
@@ -136,18 +155,45 @@ func generateSecrets() {
 }
 
 func changePort() {
-    var newPort string
+    var backendPort string
+    var frontendPort string
+    
+    currentBackend := os.Getenv("BACKEND_PORT")
+    if currentBackend == "" {
+        currentBackend = "8080"
+    }
+    currentFrontend := os.Getenv("FRONTEND_PORT")
+    if currentFrontend == "" {
+        currentFrontend = "3000"
+    }
+    
     huh.NewForm(
         huh.NewGroup(
             huh.NewInput().
-                Title("Enter new port").
-                Value(&newPort),
+                Title("Backend Port").
+                Description(fmt.Sprintf("Current: %s (leave empty to keep)", currentBackend)).
+                Value(&backendPort),
+        ),
+        huh.NewGroup(
+            huh.NewInput().
+                Title("Frontend Port").
+                Description(fmt.Sprintf("Current: %s (leave empty to keep)", currentFrontend)).
+                Value(&frontendPort),
         ),
     ).WithTheme(huh.ThemeDracula()).Run()
     
-    if newPort != "" {
-        updateEnv("PORT", newPort)
-        fmt.Println("Port updated. Restarting...")
+    changed := false
+    if backendPort != "" {
+        updateEnv("BACKEND_PORT", backendPort)
+        changed = true
+    }
+    if frontendPort != "" {
+        updateEnv("FRONTEND_PORT", frontendPort)
+        changed = true
+    }
+    
+    if changed {
+        fmt.Println("Port(s) updated. Restarting...")
         restartContainer()
     }
 }
@@ -156,15 +202,26 @@ func editQuotas() {
     var storageLimit string
     var maxUpload string
     
+    currentStorage := os.Getenv("STORAGE_LIMIT_BYTES")
+    if currentStorage == "" {
+        currentStorage = "10737418240"
+    }
+    currentUpload := os.Getenv("MAX_UPLOAD_SIZE")
+    if currentUpload == "" {
+        currentUpload = "1073741824"
+    }
+    
     huh.NewForm(
         huh.NewGroup(
             huh.NewInput().
                 Title("Total Storage Limit (bytes)").
-                Description("Default: 10GB = 10737418240").
+                Description(fmt.Sprintf("Current: %s (10GB = 10737418240)", currentStorage)).
                 Value(&storageLimit),
+        ),
+        huh.NewGroup(
             huh.NewInput().
                 Title("Max Upload Size (bytes)").
-                Description("Default: 1GB = 1073741824").
+                Description(fmt.Sprintf("Current: %s (1GB = 1073741824)", currentUpload)).
                 Value(&maxUpload),
         ),
     ).WithTheme(huh.ThemeDracula()).Run()
