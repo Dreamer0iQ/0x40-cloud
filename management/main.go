@@ -266,17 +266,32 @@ func changePort() {
     ).WithTheme(huh.ThemeDracula()).Run()
     
     changed := false
+    finalFrontendPort := currentFrontend
+    
     if backendPort != "" {
         updateEnv("BACKEND_PORT", backendPort)
         changed = true
     }
     if frontendPort != "" {
         updateEnv("FRONTEND_PORT", frontendPort)
+        finalFrontendPort = frontendPort
         changed = true
     }
     
     if changed {
-        fmt.Println("Port(s) updated. Restarting...")
+        // Обновляем CORS с новыми портами
+        fmt.Println("Updating CORS configuration...")
+        publicIP := "localhost"
+        ipCmd := exec.Command("curl", "-s", "https://api.ipify.org")
+        if ipOut, err := ipCmd.Output(); err == nil {
+            publicIP = strings.TrimSpace(string(ipOut))
+        }
+        
+        allowedOrigins := fmt.Sprintf("http://localhost:%s,http://localhost:5173,http://localhost:5174,http://%s:%s", 
+            finalFrontendPort, publicIP, finalFrontendPort)
+        updateEnv("ALLOWED_ORIGINS", allowedOrigins)
+        
+        fmt.Println("Port(s) and CORS updated. Restarting...")
         restartContainer()
     }
 }
