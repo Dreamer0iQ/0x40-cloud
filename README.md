@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="frontend/logo/logo_0x40.png" width="120" alt="0x40 Cloud Logo" />
+  <img src="frontend/logo/logo_0x40.png" width="320" alt="0x40 Cloud Logo" />
   <p>Secure, private, and personal cloud storage solution.</p>
 </div>
 
