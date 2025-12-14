@@ -119,8 +119,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		-1, // expires immediately
 		"/",
 		"",
-		h.authService.Config.Server.Env == "production", // secure only in production
-		true, // httpOnly
+		false, // secure (false to support HTTP)
+		true,  // httpOnly
 	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
@@ -130,16 +130,19 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) setAuthCookie(c *gin.Context, token string) {
 	maxAge := 24 * 60 * 60 // 24 hours in seconds
 	
+	// Note: Secure=false to support HTTP deployments (self-hosted flexibility)
+	// For HTTPS deployments, this is handled by the reverse proxy
 	c.SetCookie(
 		"auth_token",          // name
 		token,                 // value
 		maxAge,                // max age in seconds
 		"/",                   // path
 		"",                    // domain (empty = current domain)
-		h.authService.Config.Server.Env == "production", // secure (HTTPS only) in production
+		false,                 // secure (false to support HTTP)
 		true,                  // httpOnly (not accessible via JavaScript)
 	)
 
-	// Also set SameSite policy
-	c.Writer.Header().Add("Set-Cookie", "SameSite=Strict")
+	// Also set SameSite policy - Lax for cross-origin support
+	c.Writer.Header().Set("Set-Cookie", 
+		c.Writer.Header().Get("Set-Cookie") + "; SameSite=Lax")
 }
