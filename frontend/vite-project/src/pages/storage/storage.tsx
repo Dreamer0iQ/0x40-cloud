@@ -20,12 +20,22 @@ export default function Storage({ onLogout }: StorageProps) {
     console.log(user); // Fix unused variable
     const [loading, setLoading] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isDragging, setIsDragging] = useState(false);
     const dragCounterRef = useRef(0);
     const manageFilesRef = useRef<any>(null);
 
     const currentPath = normalizePath(searchParams.get('path') || '/');
+    const previewFileId = searchParams.get('preview');
+
+    // Clear preview param after reading (so refresh doesn't reopen)
+    useEffect(() => {
+        if (previewFileId) {
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete('preview');
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [previewFileId]);
 
     useEffect(() => {
         loadUser();
@@ -138,6 +148,7 @@ export default function Storage({ onLogout }: StorageProps) {
                     <FileList
                         refreshTrigger={refreshTrigger}
                         currentPath={currentPath}
+                        previewFileId={previewFileId}
                     />
                 </div>
                 <ManageFiles ref={manageFilesRef} onFileUploaded={handleFileUploaded} currentPath={currentPath} />

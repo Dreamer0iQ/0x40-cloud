@@ -129,6 +129,15 @@ export const fileService = {
     return response.data.files || [];
   },
 
+  // Поиск файлов по имени
+  searchFiles: async (query: string, limit: number = 20): Promise<FileMetadata[]> => {
+    if (!query.trim()) return [];
+    const response = await api.get<FileListResponse>(`/files/search`, {
+      params: { q: query, limit }
+    });
+    return response.data.files || [];
+  },
+
   // Скачать файл
   downloadFile: async (fileId: string, filename: string): Promise<void> => {
     const response = await api.get(`/files/${fileId}/download`, {

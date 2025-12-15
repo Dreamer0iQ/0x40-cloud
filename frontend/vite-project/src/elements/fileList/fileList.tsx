@@ -13,9 +13,10 @@ interface FileListProps {
   refreshTrigger?: number;
   currentPath?: string;
   mode?: 'storage' | 'favourites' | 'trash';
+  previewFileId?: string | null;
 }
 
-export default function FileList({ refreshTrigger, currentPath = '/', mode = 'storage' }: FileListProps) {
+export default function FileList({ refreshTrigger, currentPath = '/', mode = 'storage', previewFileId }: FileListProps) {
   const [files, setFiles] = useState<FileMetadata[]>([]);
   const [folders, setFolders] = useState<FileMetadata[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +72,16 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   useEffect(() => {
     loadFiles();
   }, [refreshTrigger, currentPath]);
+
+  // Auto-open preview from URL parameter (e.g., from search)
+  useEffect(() => {
+    if (previewFileId && files.length > 0) {
+      const file = files.find(f => f.id === previewFileId);
+      if (file) {
+        setPreviewFile(file);
+      }
+    }
+  }, [previewFileId, files]);
 
   const handleDownload = async (file: FileMetadata) => {
     try {

@@ -105,6 +105,7 @@ func main() {
 			protected.GET("/files/suggested", fileHandler.GetSuggestedFiles)
 			protected.GET("/files/images", fileHandler.GetImages)
 			protected.GET("/files/starred", fileHandler.GetStarredFiles)
+			protected.GET("/files/search", fileHandler.SearchFiles)
 			protected.GET("/files/trash", fileHandler.GetDeletedFiles)
 			protected.GET("/files/download-folder", fileHandler.DownloadFolder)
 			protected.POST("/files/folder", fileHandler.CreateFolder)

@@ -452,6 +452,18 @@ func (s *FileService) GetFilesByPath(userID uint, virtualPath string) ([]models.
 	return s.EnrichFilesWithStarred(files, userID)
 }
 
+// SearchFiles searches files by name
+func (s *FileService) SearchFiles(userID uint, query string, limit int) ([]models.File, error) {
+	if query == "" {
+		return []models.File{}, nil
+	}
+	files, err := s.fileRepo.SearchByName(userID, query, limit)
+	if err != nil {
+		return nil, err
+	}
+	return s.EnrichFilesWithStarred(files, userID)
+}
+
 // GetImages получает список файлов-изображений пользователя
 func (s *FileService) GetImages(userID uint, limit int) ([]models.File, error) {
 	// Список MIME-типов изображений

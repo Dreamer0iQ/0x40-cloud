@@ -399,3 +399,33 @@ func (h *FileHandler) GetStorageStats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, stats)
 }
+
+// SearchFiles searches files by name
+func (h *FileHandler) SearchFiles(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	query := c.Query("q")
+	if query == "" {
+		c.JSON(http.StatusOK, gin.H{"files": []interface{}{}})
+		return
+	}
+
+	limit := 20
+	if limitParam := c.Query("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	files, err := h.fileService.SearchFiles(userID.(uint), query, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"files": files})
+}

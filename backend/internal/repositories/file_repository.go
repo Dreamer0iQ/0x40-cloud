@@ -186,6 +186,18 @@ func (r *FileRepository) FindImagesByUserID(userID uint, limit int) ([]models.Fi
 	return files, err
 }
 
+// SearchByName searches files by original_name (case-insensitive)
+func (r *FileRepository) SearchByName(userID uint, query string, limit int) ([]models.File, error) {
+	var files []models.File
+	searchPattern := "%" + query + "%"
+	err := r.db.Where("user_id = ? AND original_name ILIKE ? AND mime_type != ?",
+		userID, searchPattern, "inode/directory").
+		Order("updated_at DESC").
+		Limit(limit).
+		Find(&files).Error
+	return files, err
+}
+
 func (r *FileRepository) FindAllRecursively(userID uint, virtualPathPrefix string) ([]models.File, error) {
 	var files []models.File
 
