@@ -2,6 +2,7 @@ import styles from './searchbar.module.scss'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fileService } from '../../services/fileService'
+import { authService } from '../../services/authService'
 import type { FileMetadata } from '../../types/file'
 
 export default function SearchBar() {
@@ -68,6 +69,11 @@ export default function SearchBar() {
         if (!isExpanded) {
             setTimeout(() => inputRef.current?.focus(), 100)
         }
+    }
+
+    const handleLogout = async () => {
+        await authService.logout()
+        window.location.href = '/login'
     }
 
     const getFileIcon = (mimeType: string) => {
@@ -156,12 +162,14 @@ export default function SearchBar() {
                     </div>
                 )}
             </div>
-            <div className={styles.logo}>
-                <svg width="40" height="40" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M60 10L90 30L80 60L60 80L40 60L30 30L60 10Z" stroke="#3B82F6" strokeWidth="3" fill="none" />
-                    <path d="M60 40L75 50L70 65L60 75L50 65L45 50L60 40Z" stroke="#60A5FA" strokeWidth="2" fill="none" />
+            <button className={styles.logoutButton} onClick={handleLogout}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-            </div>
+                <span>Logout</span>
+            </button>
         </header>
     )
 }
