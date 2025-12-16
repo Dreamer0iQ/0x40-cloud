@@ -37,14 +37,13 @@ func main() {
 						huh.NewOption("Status & Info", "status"),
 						huh.NewOption("Toggle Registration", "registration"),
 						huh.NewOption("Generate New Secrets", "secrets"),
-						huh.NewOption("Change Port", "port"),
 						huh.NewOption("Edit Quotas", "quotas"),
 						huh.NewOption("Start/Stop Cloud", "toggle_cloud"),
 						huh.NewOption("Exit", "exit"),
 					).
 					Value(&action),
 			),
-		).WithTheme(huh.ThemeDracula())
+		).WithTheme(huh.ThemeCatppuccin())
 
 		err := form.Run()
 		if err != nil {
@@ -59,8 +58,6 @@ func main() {
 			toggleRegistration()
 		case "secrets":
 			generateSecrets()
-		case "port":
-			changePort()
 		case "quotas":
 			editQuotas()
 		case "toggle_cloud":
@@ -160,10 +157,11 @@ func generateSecrets() {
         huh.NewGroup(
             huh.NewConfirm().
                 Title("Generate new secrets?").
-                Description("Use Left/Right arrows to toggle, Enter to confirm").
+                Affirmative("Yes!").
+                Negative("No").
                 Value(&confirm),
         ),
-    ).WithTheme(huh.ThemeDracula()).Run()
+    ).WithTheme(huh.ThemeCatppuccin()).Run()
     
     if confirm {
         fmt.Println("\n🔐 Generating cryptographically secure secrets...")
@@ -263,7 +261,7 @@ func changePort() {
                 Description(fmt.Sprintf("Current: %s (leave empty to keep)", currentFrontend)).
                 Value(&frontendPort),
         ),
-    ).WithTheme(huh.ThemeDracula()).Run()
+    ).WithTheme(huh.ThemeCatppuccin()).Run()
     
     changed := false
     finalFrontendPort := currentFrontend
@@ -322,7 +320,7 @@ func editQuotas() {
                 Description(fmt.Sprintf("Current: %s (1GB = 1073741824)", currentUpload)).
                 Value(&maxUpload),
         ),
-    ).WithTheme(huh.ThemeDracula()).Run()
+    ).WithTheme(huh.ThemeCatppuccin()).Run()
     
     if storageLimit != "" {
         updateEnv("STORAGE_LIMIT_BYTES", storageLimit)
