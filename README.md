@@ -44,7 +44,7 @@ For detailed security information, see [SECURITY.md](SECURITY.md).
 ## Interface
 
 <div align="center">
-  <img src="frontend/dashboard.png" alt="0x40 Cloud Dashboard" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+  <img src="frontend/logo/dashboard.png" alt="0x40 Cloud Dashboard" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
   <p><em>Modern, intuitive dashboard for managing your files</em></p>
 </div>
 
