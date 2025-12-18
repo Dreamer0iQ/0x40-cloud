@@ -74,7 +74,6 @@ func (h *FileHandler) GetRecentFiles(c *gin.Context) {
 		return
 	}
 
-	// Получаем параметр limit из query, по умолчанию 5
 	limit := 5
 	if limitParam := c.Query("limit"); limitParam != "" {
 		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
@@ -112,8 +111,6 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		return
 	}
 
-	// Записываем активность в Redis (не блокируем, если не получилось)
-	// Только если это не предпросмотр
 	if c.Query("preview") != "true" {
 		go func() {
 			if h.activityService != nil {
@@ -127,7 +124,6 @@ func (h *FileHandler) DownloadFile(c *gin.Context) {
 		}()
 	}
 
-	// Устанавливаем заголовки для скачивания
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.OriginalName))
@@ -171,7 +167,6 @@ func (h *FileHandler) RenameFile(c *gin.Context) {
 		return
 	}
 
-	// Получаем новое имя из body
 	var req struct {
 		NewName string `json:"new_name" binding:"required"`
 	}
@@ -181,7 +176,6 @@ func (h *FileHandler) RenameFile(c *gin.Context) {
 		return
 	}
 
-	// Переименовываем файл
 	file, err := h.fileService.RenameFile(fileID, userID.(uint), req.NewName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -202,7 +196,6 @@ func (h *FileHandler) GetSuggestedFiles(c *gin.Context) {
 		return
 	}
 
-	// Получаем параметр limit из query, по умолчанию 10
 	limit := 10
 	if limitParam := c.Query("limit"); limitParam != "" {
 		if parsedLimit, err := strconv.Atoi(limitParam); err == nil && parsedLimit > 0 {
@@ -210,7 +203,6 @@ func (h *FileHandler) GetSuggestedFiles(c *gin.Context) {
 		}
 	}
 
-	// Получаем рекомендованные файлы
 	files, err := h.activityService.GetSuggestedFiles(c.Request.Context(), userID.(uint), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -220,7 +212,6 @@ func (h *FileHandler) GetSuggestedFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }
 
-// ToggleStarred добавляет или удаляет файл из избранного
 func (h *FileHandler) ToggleStarred(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -247,7 +238,6 @@ func (h *FileHandler) ToggleStarred(c *gin.Context) {
 	})
 }
 
-// GetStarredFiles получает все избранные файлы пользователя
 func (h *FileHandler) GetStarredFiles(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

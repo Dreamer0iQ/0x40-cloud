@@ -17,20 +17,17 @@ func (h *FileHandler) GetFilesByPath(c *gin.Context) {
 		return
 	}
 
-	// Получаем путь из query параметра
 	virtualPath := c.Query("path")
 	if virtualPath == "" {
 		virtualPath = "/"
 	}
 
-	// Валидируем и очищаем путь
 	sanitizedPath, err := utils.SanitizePath(virtualPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
 		return
 	}
 
-	// Получаем файлы и папки по пути
 	files, err := h.fileService.GetFilesByPath(userID.(uint), sanitizedPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -40,7 +37,6 @@ func (h *FileHandler) GetFilesByPath(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }
 
-// ToggleStarredFolder добавляет или удаляет папку из избранного
 func (h *FileHandler) ToggleStarredFolder(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -57,14 +53,12 @@ func (h *FileHandler) ToggleStarredFolder(c *gin.Context) {
 		return
 	}
 
-	// Валидируем путь
 	sanitizedPath, err := utils.SanitizePath(req.Path)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
 		return
 	}
 
-	// Ensure it ends with slash
 	if len(sanitizedPath) > 0 && sanitizedPath[len(sanitizedPath)-1] != '/' {
 		sanitizedPath += "/"
 	}
@@ -97,7 +91,6 @@ func (h *FileHandler) DownloadFolder(c *gin.Context) {
 		return
 	}
 
-	// Валидируем путь
 	sanitizedPath, err := utils.SanitizePath(path)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
@@ -129,7 +122,6 @@ func (h *FileHandler) DeleteFolder(c *gin.Context) {
 		return
 	}
 
-	// Валидируем путь
 	sanitizedPath, err := utils.SanitizePath(path)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
@@ -161,20 +153,17 @@ func (h *FileHandler) CreateFolder(c *gin.Context) {
 		return
 	}
 
-	// Валидируем имя папки
 	if req.Name == "" || strings.Contains(req.Name, "/") || strings.Contains(req.Name, "\\") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder name"})
 		return
 	}
 
-	// Валидируем путь
 	sanitizedPath, err := utils.SanitizePath(req.Path)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
 		return
 	}
 
-	// Создаем папку
 	file, err := h.fileService.CreateFolder(userID.(uint), sanitizedPath, req.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

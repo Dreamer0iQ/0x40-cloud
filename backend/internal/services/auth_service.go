@@ -11,13 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	// BcryptCost определяет сложность хеширования
-	// 10 = быстро (для разработки)
-	// 12 = рекомендуется для production (медленнее, но безопаснее)
-	// 14 = очень безопасно (но медленно)
-	BcryptCost = 12
-)
+const BcryptCost = 12
 
 type AuthService struct {
 	userRepo *repositories.UserRepository
@@ -36,6 +30,7 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	if err != nil {
 		return nil, err
 	}
+
 	if existingUser != nil {
 		return nil, errors.New("user with this email already exists")
 	}
@@ -44,6 +39,7 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.AuthRespons
 	if err != nil {
 		return nil, err
 	}
+
 	if existingUser != nil {
 		return nil, errors.New("username already taken")
 	}
@@ -79,6 +75,7 @@ func (s *AuthService) Login(req *models.LoginRequest) (*models.AuthResponse, err
 	if err != nil {
 		return nil, err
 	}
+
 	if user == nil {
 		return nil, errors.New("invalid credentials")
 	}
@@ -103,9 +100,11 @@ func (s *AuthService) GetUserByID(id uint) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if user == nil {
 		return nil, errors.New("user not found")
 	}
+
 	return user, nil
 }
 

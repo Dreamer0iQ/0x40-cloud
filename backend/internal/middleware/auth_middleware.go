@@ -10,10 +10,8 @@ import (
 
 func AuthMiddleware(authService *services.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Try to get token from cookie first
 		token, err := c.Cookie("auth_token")
 		
-		// If not in cookie, try Authorization header (for backward compatibility)
 		if err != nil || token == "" {
 			authHeader := c.GetHeader("Authorization")
 			if authHeader == "" {

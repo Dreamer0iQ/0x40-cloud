@@ -51,7 +51,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	var req models.RegisterRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": getValidationError(err)})
 		return
@@ -66,7 +65,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	// Set JWT token as httpOnly cookie
 	h.setAuthCookie(c, response.Token)
 
-	// Return user info without token
 	c.JSON(http.StatusCreated, gin.H{
 		"user": response.User,
 	})
@@ -74,7 +72,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": getValidationError(err)})
 		return
@@ -89,7 +86,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Set JWT token as httpOnly cookie
 	h.setAuthCookie(c, response.Token)
 
-	// Return user info without token
 	c.JSON(http.StatusOK, gin.H{
 		"user": response.User,
 	})
@@ -112,7 +108,6 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	// Clear the auth cookie
 	c.SetCookie(
 		"auth_token",
 		"",
@@ -126,23 +121,20 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
 
-// setAuthCookie sets the JWT token as an httpOnly cookie
 func (h *AuthHandler) setAuthCookie(c *gin.Context, token string) {
-	maxAge := 24 * 60 * 60 // 24 hours in seconds
-	
-	// Note: Secure=false to support HTTP deployments (self-hosted flexibility)
-	// For HTTPS deployments, this is handled by the reverse proxy
+	maxAge := 24 * 60 * 60
+
 	c.SetCookie(
-		"auth_token",          // name
-		token,                 // value
-		maxAge,                // max age in seconds
-		"/",                   // path
-		"",                    // domain (empty = current domain)
-		false,                 // secure (false to support HTTP)
-		true,                  // httpOnly (not accessible via JavaScript)
+		"auth_token", // name
+		token,        // value
+		maxAge,       // max age in seconds
+		"/",          // path
+		"",           // domain (empty = current domain)
+		false,        // secure (false to support HTTP)
+		true,         // httpOnly (not accessible via JavaScript)
 	)
 
 	// Also set SameSite policy - Lax for cross-origin support
-	c.Writer.Header().Set("Set-Cookie", 
-		c.Writer.Header().Get("Set-Cookie") + "; SameSite=Lax")
+	c.Writer.Header().Set("Set-Cookie",
+		c.Writer.Header().Get("Set-Cookie")+"; SameSite=Lax")
 }
