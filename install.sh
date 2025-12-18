@@ -62,6 +62,17 @@ else
     print_success "Docker is already installed."
 fi
 
+# Check Docker permissions
+DOCKER_CMD="docker"
+if command -v docker &> /dev/null; then
+    if ! docker ps >/dev/null 2>&1; then
+        if sudo docker ps >/dev/null 2>&1; then
+            print_warn "Docker commands require sudo. Switching to 'sudo docker'..."
+            DOCKER_CMD="sudo docker"
+        fi
+    fi
+fi
+
 # 2. Clone Repository
 INSTALL_DIR="0x40-cloud"
 REPO_URL="https://github.com/Dreamer0iQ/0x40-cloud.git"
@@ -166,7 +177,7 @@ FINAL_IMAGE=""
 # Try to pull from registry
 for IMAGE_NAME in "${IMAGE_NAMES[@]}"; do
     print_info "Trying to pull $IMAGE_NAME..."
-    if docker pull "$IMAGE_NAME" 2>/dev/null; then
+    if $DOCKER_CMD pull "$IMAGE_NAME" 2>/dev/null; then
         print_success "Management image pulled successfully from registry."
         FINAL_IMAGE="$IMAGE_NAME"
         break
@@ -179,7 +190,7 @@ if [ -z "$FINAL_IMAGE" ]; then
     print_info "Building management interface from source (ensuring latest version)..."
     
     # Build the management image locally
-    if docker build -t "$LOCAL_IMAGE_NAME" ./management/; then
+    if $DOCKER_CMD build -t "$LOCAL_IMAGE_NAME" ./management/; then
         print_success "Management image built successfully."
         FINAL_IMAGE="$LOCAL_IMAGE_NAME"
     else
@@ -187,7 +198,8 @@ if [ -z "$FINAL_IMAGE" ]; then
         print_warn "Troubleshooting:"
         echo -e "   1. Check if Docker daemon is running"
         echo -e "   2. Ensure you have enough disk space"
-        echo -e "   3. Check management/Dockerfile for errors"
+        echo -e "   3. Add your user to docker group: sudo usermod -aG docker \$USER"
+        echo -e "   4. Check management/Dockerfile for errors"
         exit 1
     fi
 fi
@@ -198,7 +210,7 @@ print_info "Creating global command '0x40-cloud'..."
 INSTALL_PATH="$(pwd)"
 cat << EOF | sudo tee /usr/local/bin/0x40-cloud > /dev/null
 #!/bin/bash
-docker run -it --rm \\
+$DOCKER_CMD run -it --rm \\
     -v /var/run/docker.sock:/var/run/docker.sock \\
     -v "$INSTALL_PATH:/app/workdir" \\
     $FINAL_IMAGE
@@ -214,7 +226,7 @@ echo -e "${YELLOW}Tip: Select 'Start/Stop Cloud' to launch all services.${NC}"
 echo ""
 
 # Run directly
-docker run -it --rm \
+$DOCKER_CMD run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "$(pwd):/app/workdir" \
     $FINAL_IMAGE
@@ -240,8 +252,4 @@ echo ""
 echo -e "${CYAN}Access your cloud:${NC}"
 echo -e "  Frontend: ${BOLD}http://$PUBLIC_IP:3000${NC}"
 echo -e "  Backend:  ${BOLD}http://$PUBLIC_IP:8080${NC}"
-echo ""
-echo -e "${CYAN}Documentation:${NC}"
-echo -e "  Security: ${BOLD}cat 0x40-cloud/SECURITY_AUDIT_REPORT.md${NC}"
-echo -e "  Setup:    ${BOLD}cat 0x40-cloud/SECURITY_SETUP.md${NC}"
 echo ""
