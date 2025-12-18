@@ -208,6 +208,7 @@ fi
 print_header "System Integration"
 print_info "Creating global command '0x40-cloud'..."
 INSTALL_PATH="$(pwd)"
+sudo mkdir -p /usr/local/bin
 cat << EOF | sudo tee /usr/local/bin/0x40-cloud > /dev/null
 #!/bin/bash
 $DOCKER_CMD run -it --rm \\
