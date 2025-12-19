@@ -3,13 +3,11 @@ import type { FileUploadResponse, FileListResponse, FileMetadata, StorageStats }
 import { get, set, clear } from 'idb-keyval';
 
 export const fileService = {
-  // Получить статистику хранилища
   getStorageStats: async (): Promise<StorageStats> => {
     const response = await api.get<StorageStats>('/files/storage');
     return response.data;
   },
 
-  // Загрузить файл
   uploadFile: async (
     file: File,
     onProgress?: (progress: number) => void,
@@ -41,7 +39,6 @@ export const fileService = {
     return response.data;
   },
 
-  // Загрузить несколько файлов
   uploadFiles: async (
     files: File[],
     onProgress?: (fileIndex: number, progress: number) => void,
@@ -57,7 +54,6 @@ export const fileService = {
     return Promise.all(uploadPromises);
   },
 
-  // Загрузить папку (с сохранением структуры)
   uploadFolder: async (
     files: File[],
     folderName: string,
@@ -67,21 +63,13 @@ export const fileService = {
     console.log(`📦 Starting upload of folder "${folderName}" with ${files.length} files`);
 
     const uploadPromises = files.map((file, index) => {
-      // Извлекаем относительный путь из webkitRelativePath
-      // Пример: "MyFolder/subfolder/file.txt"
       const relativePath = (file as any).webkitRelativePath || file.name;
       const pathParts = relativePath.split('/');
 
-      // Убираем имя файла, оставляем только путь к папке
-      // Например, из ["MyFolder", "subfolder", "file.txt"] получаем ["MyFolder", "subfolder"]
       const fileName = pathParts.pop();
 
-      // Создаем виртуальный путь
-      // Если parentPath задан, добавляем его
-      // Например: parentPath="/foo/", folder="bar/" -> "/foo/bar/"
       let virtualPath = '/';
       if (parentPath && parentPath !== '/') {
-        // Убеждаемся, что parentPath заканчивается на /
         const prefix = parentPath.endsWith('/') ? parentPath : parentPath + '/';
         virtualPath = prefix + (pathParts.length > 0 ? pathParts.join('/') + '/' : '');
       } else {
@@ -109,19 +97,17 @@ export const fileService = {
     return response.data.files || [];
   },
 
-  // Получить недавние файлы
   getRecentFiles: async (limit: number = 4): Promise<FileMetadata[]> => {
     const response = await api.get<FileListResponse>(`/files/recent?limit=${limit}`);
     return response.data.files || [];
   },
 
-  // Получить рекомендованные файлы (на основе активности)
+  // рекомендованные файлы (на основе активности)
   getSuggestedFiles: async (limit: number = 4): Promise<FileMetadata[]> => {
     const response = await api.get<FileListResponse>(`/files/suggested?limit=${limit}`);
     return response.data.files || [];
   },
 
-  // Получить файлы и папки по виртуальному пути
   getFilesByPath: async (path: string = '/'): Promise<FileMetadata[]> => {
     const response = await api.get<FileListResponse>(`/files/by-path`, {
       params: { path }
@@ -129,7 +115,6 @@ export const fileService = {
     return response.data.files || [];
   },
 
-  // Поиск файлов по имени
   searchFiles: async (query: string, limit: number = 20): Promise<FileMetadata[]> => {
     if (!query.trim()) return [];
     const response = await api.get<FileListResponse>(`/files/search`, {
@@ -138,13 +123,11 @@ export const fileService = {
     return response.data.files || [];
   },
 
-  // Скачать файл
   downloadFile: async (fileId: string, filename: string): Promise<void> => {
     const response = await api.get(`/files/${fileId}/download`, {
       responseType: 'blob',
     });
 
-    // Создаем ссылку для скачивания
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -155,7 +138,6 @@ export const fileService = {
     window.URL.revokeObjectURL(url);
   },
 
-  // Скачать папку как ZIP
   downloadFolder: async (virtualPath: string, folderName: string): Promise<void> => {
     const response = await api.get(`/files/download-folder`, {
       params: { path: virtualPath },
@@ -189,7 +171,6 @@ export const fileService = {
 
     const blob = response.data;
 
-    // Save to cache asynchronously
     set(fileId, blob).catch(err => console.warn('Failed to save to cache:', err));
 
     return blob;
@@ -233,7 +214,6 @@ export const fileService = {
     return response.data.files || [];
   },
 
-  // Получить SHA256 хеш файла на клиенте (для проверки)
   calculateSHA256: async (file: File): Promise<string> => {
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -242,7 +222,6 @@ export const fileService = {
     return hashHex;
   },
 
-  // Форматирование размера файла
   formatFileSize: (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
 
@@ -253,35 +232,29 @@ export const fileService = {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   },
 
-  // Получить удаленные файлы (Trash)
   getDeletedFiles: async (): Promise<FileMetadata[]> => {
     const response = await api.get<FileListResponse>('/files/trash');
     return response.data.files || [];
   },
 
-  // Восстановить файл
   restoreFile: async (fileId: string): Promise<void> => {
     await api.post(`/files/${fileId}/restore`);
   },
 
-  // Удалить файл навсегда
   deleteFilePermanently: async (fileId: string): Promise<void> => {
     await api.delete(`/files/${fileId}/permanent`);
   },
 
-  // Получить изображения
   getImages: async (limit: number = 20): Promise<FileMetadata[]> => {
     const response = await api.get<FileListResponse>(`/files/images?limit=${limit}`);
     return response.data.files || [];
   },
 
 
-  // Переместить файл
   moveFile: async (fileId: string, newPath: string): Promise<void> => {
     await api.patch(`/files/${fileId}/move`, { new_path: newPath });
   },
 
-  // Создать папку
   createFolder: async (path: string, name: string): Promise<FileMetadata> => {
     const response = await api.post('/files/folder', { path, name });
     return response.data.folder;

@@ -200,7 +200,6 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
   };
 
   const handleFolderClick = (folderName: string) => {
-    // Переходим в папку, добавляя её к текущему пути
     const newPath = normalizePath(
       currentPath === '/'
         ? `/${folderName}`
@@ -237,8 +236,6 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
 
   const handleDragStart = (e: React.DragEvent, file: FileMetadata) => {
     if (file.mime_type === 'inode/directory') {
-      // Prevent dragging folders for now if we don't support it fully
-      // or just let it be file move only as requested
       e.preventDefault();
       return;
     }
@@ -258,8 +255,8 @@ export default function FileList({ refreshTrigger, currentPath = '/', mode = 'st
 
     try {
       const draggedFile: FileMetadata = JSON.parse(data);
-      if (draggedFile.id === targetFolder.id) return; // Can't drop on itself (though folder vs file types prevent this mostly)
-      if (draggedFile.mime_type === 'inode/directory') return; // Don't allow moving folders into folders yet if complex
+      if (draggedFile.id === targetFolder.id) return; 
+      if (draggedFile.mime_type === 'inode/directory') return; 
 
       const targetPath = normalizePath(
         currentPath === '/'

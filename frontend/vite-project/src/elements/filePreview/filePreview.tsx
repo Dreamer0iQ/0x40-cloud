@@ -93,9 +93,6 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
                         setPreviewType('image');
                     } catch (heicError: any) {
                         console.error('HEIC conversion failed:', heicError);
-                        // If conversion fails, we can't preview it.
-                        // We'll throw to the outer catch to show the error state, 
-                        // or we can handle it here to show a specific message.
                         if (heicError?.code === 2 || heicError?.message?.includes('ERR_LIBHEIF')) {
                             setError('HEIC preview not supported for this file. Please download to view.');
                             setLoading(false);
@@ -172,8 +169,6 @@ export default function FilePreview({ file, onClose }: FilePreviewProps) {
 
         window.addEventListener('keydown', handleKeyDown);
 
-        // Focus the modal to ensure key events are captured if needed, 
-        // though window listener handles it globally.
         modalRef.current?.focus();
 
         return () => {

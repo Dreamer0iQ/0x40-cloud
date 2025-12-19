@@ -20,8 +20,6 @@ func NewShareHandler(service *services.ShareService) *ShareHandler {
 }
 
 // CreateShare godoc
-// @Summary Create a public share link for a file
-// @Security BearerAuth
 func (h *ShareHandler) CreateShare(c *gin.Context) {
 	userIDRaw, exists := c.Get("user_id")
 	if !exists {
@@ -60,7 +58,6 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 }
 
 // GetSharedFile godoc
-// @Summary Get shared file info (Public)
 func (h *ShareHandler) GetSharedFile(c *gin.Context) {
 	token := c.Param("token")
 	share, err := h.service.GetSharedFile(token)
@@ -72,41 +69,27 @@ func (h *ShareHandler) GetSharedFile(c *gin.Context) {
 }
 
 // DownloadSharedFile godoc
-// @Summary Download shared file (Public)
 func (h *ShareHandler) DownloadSharedFile(c *gin.Context) {
 	token := c.Param("token")
-
-	// Set headers for download
-	// We need to fetch metadata first to set headers, or let the service handle it?
-	// The service streams to writer. We should set headers before calling service.
-	// But we need filename and size.
-
-	// Let's get metadata first.
 	share, err := h.service.GetSharedFile(token)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Set headers
+	// headers
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", share.File.OriginalName))
 	c.Header("Content-Type", share.File.MimeType)
 	c.Header("Content-Length", fmt.Sprintf("%d", share.File.Size))
 
-	// Stream file
 	if _, err := h.service.DownloadSharedFile(token, c.Writer); err != nil {
-		// If streaming started, we can't change status code easily.
-		// But if it failed immediately, we can.
-		// For now log error.
 		fmt.Printf("Error downloading shared file: %v\n", err)
 	}
 }
 
 // RevokeShare godoc
-// @Summary Revoke a share link
-// @Security BearerAuth
 func (h *ShareHandler) RevokeShare(c *gin.Context) {
 	userIDRaw, exists := c.Get("user_id")
 	if !exists {
@@ -125,8 +108,6 @@ func (h *ShareHandler) RevokeShare(c *gin.Context) {
 }
 
 // ListShares godoc
-// @Summary List all shares for the user
-// @Security BearerAuth
 func (h *ShareHandler) ListShares(c *gin.Context) {
 	userIDRaw, exists := c.Get("user_id")
 	if !exists {

@@ -80,12 +80,11 @@ export default function Recommendations({ title = "Recent files", refreshTrigger
 
     useEffect(() => {
         loadRecentFiles();
-    }, [refreshTrigger, limit, type]); // Перезагружаем при изменении refreshTrigger, limit или type
+    }, [refreshTrigger, limit, type]); 
 
     const loadRecentFiles = async () => {
         try {
             setLoading(true);
-            // Выбираем метод в зависимости от типа
             let files: FileMetadata[] = [];
             if (type === 'suggested') {
                 files = await fileService.getSuggestedFiles(limit);

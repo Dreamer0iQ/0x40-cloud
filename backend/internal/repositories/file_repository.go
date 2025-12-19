@@ -1,8 +1,9 @@
 package repositories
 
 import (
-	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 	"strings"
+
+	"github.com/bhop_dynasty/0x40_cloud/internal/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -99,14 +100,9 @@ func (r *FileRepository) FindByUserIDAndPath(userID uint, virtualPath string) ([
 		return nil, err
 	}
 
-	// Получаем уникальные папки первого уровня вложенности
-	// Ищем все пути, которые начинаются с текущего пути, но не равны ему
 	var subPaths []struct {
 		VirtualPath string
 	}
-
-	// Паттерн для поиска: если путь = "/", ищем "/%" но не "/",
-	// если путь = "/ctf/", ищем "/ctf/%" но не "/ctf/"
 	searchPattern := virtualPath + "%"
 
 	err = r.db.Model(&models.File{}).
@@ -115,18 +111,15 @@ func (r *FileRepository) FindByUserIDAndPath(userID uint, virtualPath string) ([
 		Find(&subPaths).Error
 
 	if err != nil {
-		return files, nil // Возвращаем хотя бы файлы, если не удалось получить папки
+		return files, nil
 	}
 
-	// Извлекаем уникальные папки первого уровня
 	folderMap := make(map[string]bool)
 	pathLen := len(virtualPath)
 
 	for _, sp := range subPaths {
-		// Извлекаем первую папку после текущего пути
-		subPath := sp.VirtualPath[pathLen:] // Убираем префикс текущего пути
+		subPath := sp.VirtualPath[pathLen:]
 
-		// Находим первый слэш (это граница папки первого уровня)
 		slashIdx := 0
 		for i, c := range subPath {
 			if c == '/' {
@@ -141,9 +134,7 @@ func (r *FileRepository) FindByUserIDAndPath(userID uint, virtualPath string) ([
 		}
 	}
 
-	// Добавляем "виртуальные" записи для папок
 	for folderName := range folderMap {
-		// Создаем виртуальную запись для папки
 		folderFile := models.File{
 			OriginalName: folderName,
 			VirtualPath:  virtualPath,
@@ -210,7 +201,7 @@ func (r *FileRepository) FindAllRecursively(userID uint, virtualPathPrefix strin
 
 	err := r.db.Where("user_id = ? AND virtual_path LIKE ?", userID, searchPattern).
 		Find(&files).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -252,26 +243,15 @@ func (r *FileRepository) GetStorageStats(userID uint) (*models.StorageStats, err
 		}
 	}
 
-	// Calculate trash size
-	// Using Row().Scan is tricky with NULL sum, so we count rows first or use SQL Coalesce
-	// SQLite/Postgres COALESCE works. GORM Raw is safest.
-	// But let's try standard GORM approach for sum with a pointer receiver if needed, or query Count.
-	// Let's use a struct scan to be safe.
 	var trashResult struct {
 		TotalSize int64
 	}
-	
-	// Note: Sum() on empty set returns NULL in SQL. GORM might not handle scanning NULL into int64 gracefully directly.
-	// But let's check if rows exist first? No, that's extra query.
-	// Let's use COALESCE in select.
 	err = r.db.Unscoped().Model(&models.File{}).
 		Select("COALESCE(SUM(size), 0) as total_size").
 		Where("user_id = ? AND deleted_at IS NOT NULL", userID).
 		Scan(&trashResult).Error
-	
+
 	if err != nil {
-		// Log error but maybe don't fail entire request?
-		// For now return error
 		return nil, err
 	}
 	stats.TrashSize = trashResult.TotalSize

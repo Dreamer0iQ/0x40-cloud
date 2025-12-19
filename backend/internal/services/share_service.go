@@ -1,21 +1,22 @@
 package services
 
 import (
-	"github.com/bhop_dynasty/0x40_cloud/internal/models"
-	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-    "fmt"
+	"fmt"
 	"io"
 	"time"
+
+	"github.com/bhop_dynasty/0x40_cloud/internal/models"
+	"github.com/bhop_dynasty/0x40_cloud/internal/repositories"
 
 	"github.com/google/uuid"
 )
 
 type ShareService struct {
-	repo       *repositories.SharedFileRepository
-	fileRepo   *repositories.FileRepository
+	repo        *repositories.SharedFileRepository
+	fileRepo    *repositories.FileRepository
 	fileService *FileService
 }
 
@@ -24,25 +25,21 @@ func NewShareService(repo *repositories.SharedFileRepository, fileRepo *reposito
 }
 
 func (s *ShareService) CreateShare(userID uint, fileID uuid.UUID, limit *int, expiresAt *time.Time) (*models.SharedFile, error) {
-	// 1. Verify file ownership
 	file, err := s.fileRepo.FindByID(fileID)
 	if err != nil {
 		return nil, err
 	}
-    // Debug logging
-    fmt.Printf("DEBUG: CreateShare - Request UserID: %d, File UserID: %d, FileID: %s\n", userID, file.UserID, file.ID)
-    
+	fmt.Printf("DEBUG: CreateShare - Request UserID: %d, File UserID: %d, FileID: %s\n", userID, file.UserID, file.ID)
+
 	if file.UserID != userID {
 		return nil, errors.New("unauthorized")
 	}
 
-	// 2. Generate random token
 	token, err := generateToken(32)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Create share record
 	share := &models.SharedFile{
 		Token:     token,
 		FileID:    fileID,
@@ -83,12 +80,10 @@ func (s *ShareService) DownloadSharedFile(token string, dst io.Writer) (*models.
 		return nil, err
 	}
 
-	// Increment downloads
 	if err := s.repo.IncrementDownloads(token); err != nil {
 		return nil, err
 	}
 
-	// Decrypt and stream file
 	if err := s.fileService.decryptFile(share.File.Path, dst); err != nil {
 		return nil, err
 	}

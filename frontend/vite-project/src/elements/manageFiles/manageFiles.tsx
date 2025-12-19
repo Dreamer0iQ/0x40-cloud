@@ -22,9 +22,7 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
     const [isCreatingNewFolder, setIsCreatingNewFolder] = useState(false);
     const location = useLocation();
 
-    // Check if we are in storage route
     const isStorageRoute = location.pathname.startsWith('/storage');
-    // We can create folder only in storage route
     const canCreateFolder = isStorageRoute;
 
     const handleFileUpload = async (files: FileList | null, isFolder: boolean = false) => {
@@ -33,18 +31,14 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
         const fileArray = Array.from(files);
 
         if (isFolder && fileArray.length > 0) {
-            // Загрузка папки - показываем модальное окно для ввода имени
             const firstFilePath = (fileArray[0] as any).webkitRelativePath || fileArray[0].name;
             const pathParts = firstFilePath.split('/');
             const detectedFolderName = pathParts.length > 1 ? pathParts[0] : 'My Folder';
 
-            // Сохраняем файлы и показываем модальное окно
             setPendingFiles(fileArray);
             setDefaultFolderName(detectedFolderName);
             setShowFolderModal(true);
         } else {
-            // Загрузка обычных файлов без модального окна
-            // Используем currentPath или '/' как виртуальный путь
             await uploadFiles(fileArray, false, undefined, currentPath);
         }
     };
@@ -74,7 +68,6 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
     const handleFolderNameCancel = () => {
         setShowFolderModal(false);
         setPendingFiles([]);
-        // Сбрасываем input
         if (folderInputRef.current) {
             folderInputRef.current.value = '';
         }
@@ -92,7 +85,6 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
 
                 console.log(`📁 Uploading folder: "${folderName}" with ${fileArray.length} files`);
 
-                // Загрузка папки с сохранением структуры
                 let completedFiles = 0;
                 await fileService.uploadFolder(fileArray, folderName, (_fileIndex, progress) => {
                     if (progress === 100) {
@@ -120,10 +112,8 @@ const ManageFiles = forwardRef(({ onFileUploaded, currentPath }: ManageFilesProp
                 }, targetPath);
             }
 
-            // Уведомляем родительский компонент об успешной загрузке
             onFileUploaded?.();
 
-            // Сбрасываем прогресс
             setTimeout(() => {
                 setUploadProgress(0);
                 setIsUploading(false);

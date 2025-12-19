@@ -24,7 +24,6 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
     const diskPercentage = ((diskUsed / diskTotal) * 100);
     const totalFiles = Object.values(filesByType).reduce((sum, count) => sum + count, 0);
 
-    // Анимация при загрузке
     useEffect(() => {
         const duration = 1500; // 1.5 секунды
         const steps = 60; // 60 кадров
@@ -35,13 +34,10 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
             currentStep++;
             const progress = currentStep / steps;
 
-            // Easing функция для плавности (ease-out)
             const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-            // Анимация диска
             setAnimatedDiskPercentage(diskPercentage * easeProgress);
 
-            // Анимация файлов
             setAnimatedFiles({
                 documents: Math.round(filesByType.documents * easeProgress),
                 images: Math.round(filesByType.images * easeProgress),
@@ -51,7 +47,6 @@ export default function StorageStats({ diskUsed, diskTotal, filesByType }: Stora
 
             if (currentStep >= steps) {
                 clearInterval(timer);
-                // Устанавливаем точные значения в конце
                 setAnimatedDiskPercentage(diskPercentage);
                 setAnimatedFiles(filesByType);
             }
